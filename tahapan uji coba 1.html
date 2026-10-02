@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Academic Planner - Student App</title>
+  <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-hover: #4338ca;
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --text: #0f172a;
+      --muted: #64748b;
+      --border: #e2e8f0;
+      --danger: #ef4444;
+      --warning: #f59e0b;
+      --success: #10b981;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background-color: var(--bg); color: var(--text); padding-bottom: 80px; }
+
+    .container { max-width: 480px; margin: 0 auto; padding: 20px; }
+    .card { background: var(--card-bg); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid var(--border); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .hidden { display: none !important; }
+
+    /* Auth UI */
+    .auth-header { text-align: center; margin-bottom: 24px; }
+    .auth-header h2 { color: var(--primary); font-size: 24px; }
+    .form-group { margin-bottom: 14px; }
+    .form-group label { display: block; font-size: 12px; font-weight: 600; color: var(--muted); margin-bottom: 4px; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 10px; border-radius: 8px; border: 1px solid var(--border); font-size: 14px; outline: none; }
+    
+    .password-wrapper { position: relative; }
+    .password-wrapper input { padding-right: 40px; }
+    .toggle-password { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); cursor: pointer; user-select: none; font-size: 16px; opacity: 0.7; }
+
+    .btn { width: 100%; padding: 12px; background: var(--primary); color: white; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .btn:hover { background: var(--primary-hover); }
+    .btn-secondary { background: transparent; color: var(--primary); border: 1px solid var(--primary); margin-top: 8px; }
+    .btn-danger { background: var(--danger); color: white; border: none; margin-top: 8px; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-sm { width: auto; padding: 6px 12px; font-size: 12px; }
+    .auth-toggle { text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); }
+    .auth-toggle span { color: var(--primary); font-weight: 600; cursor: pointer; }
+
+    /* Header & Semester Switcher */
+    .header-user { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+    .greeting h3 { font-size: 20px; }
+    
+    .semester-box { display: flex; align-items: center; justify-content: space-between; background: #e0e7ff; padding: 8px 12px; border-radius: 8px; margin-bottom: 16px; }
+    .semester-box label { font-size: 12px; font-weight: 700; color: var(--primary); }
+    .semester-box select { background: white; border: 1px solid var(--primary); padding: 4px 8px; border-radius: 6px; font-weight: 600; color: var(--primary); outline: none; }
+
+    .stats-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 16px; }
+    .stat-card { background: var(--card-bg); padding: 12px; border-radius: 8px; text-align: center; border: 1px solid var(--border); }
+    .stat-num { font-size: 20px; font-weight: 700; color: var(--primary); }
+    .stat-label { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .section-title { font-size: 15px; font-weight: 700; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; }
+
+    /* Quote Widget */
+    .quote-card { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; padding: 16px; border-radius: 12px; margin-bottom: 16px; box-shadow: 0 4px 6px -1px rgba(79, 70, 229, 0.2); }
+    .quote-title { font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; opacity: 0.85; margin-bottom: 6px; font-weight: 700; }
+    .quote-text { font-size: 14px; font-style: italic; font-weight: 500; line-height: 1.4; }
+
+    /* Items Card */
+    .day-header { font-size: 13px; font-weight: 700; color: var(--primary); background: #f1f5f9; padding: 6px 10px; border-radius: 6px; margin-top: 10px; margin-bottom: 6px; }
+    .item-card { display: flex; justify-content: space-between; align-items: flex-start; padding: 12px; border-bottom: 1px solid var(--border); gap: 10px; }
+    .item-card:last-child { border-bottom: none; }
+    .item-clickable { cursor: pointer; transition: background 0.2s; }
+    .item-clickable:hover { background: #f8fafc; }
+    .item-title { font-size: 13px; font-weight: 600; }
+    .item-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    /* Home Task Box */
+    .home-task-box { background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 8px; margin-top: 8px; }
+    .home-task-title { font-size: 11px; font-weight: 700; color: #ef4444; display: flex; align-items: center; gap: 4px; }
+    .home-task-desc { font-size: 11px; color: #334155; margin-top: 2px; }
+    .home-task-none { font-size: 11px; color: #10b981; font-weight: 600; margin-top: 4px; }
+
+    /* Tabs */
+    .day-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
+    .day-tabs::-webkit-scrollbar { display: none; }
+    .day-tab { padding: 6px 14px; background: #e2e8f0; border-radius: 20px; font-size: 12px; font-weight: 600; color: var(--muted); cursor: pointer; white-space: nowrap; }
+    .day-tab.active { background: var(--primary); color: white; }
+
+    /* Task Specific */
+    .task-checkbox { width: 18px; height: 18px; cursor: pointer; accent-color: var(--primary); margin-top: 2px; }
+    .task-completed .item-title { text-decoration: line-through; color: var(--muted); }
+    .badge-deadline { font-size: 10px; padding: 2px 6px; border-radius: 4px; font-weight: 600; background: #fee2e2; color: var(--danger); display: inline-block; margin-top: 4px; }
+    .attachment-preview { max-width: 100%; max-height: 120px; border-radius: 6px; margin-top: 6px; border: 1px solid var(--border); display: block; }
+
+    .action-btns { display: flex; gap: 6px; }
+    .action-btn { background: none; border: none; cursor: pointer; font-size: 14px; opacity: 0.8; }
+    .action-btn:hover { opacity: 1; }
+
+    /* Calendar Style */
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+    .calendar-header h3 { font-size: 16px; color: var(--primary); }
+    .cal-btn { background: #e0e7ff; color: var(--primary); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; font-weight: bold; }
+    
+    .calendar-weekdays { display: grid; grid-template-columns: repeat(7, 1fr); text-align: center; font-size: 11px; font-weight: bold; color: var(--muted); margin-bottom: 6px; }
+    .calendar-days { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+    .cal-day { aspect-ratio: 1; border: 1px solid var(--border); border-radius: 8px; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; padding: 4px; font-size: 12px; cursor: pointer; background: white; position: relative; }
+    .cal-day.empty { background: transparent; border: none; cursor: default; }
+    .cal-day.today { border: 2px solid var(--primary); font-weight: bold; background: #e0e7ff; }
+    .cal-day.selected { background: #4f46e5; color: white; }
+    .cal-dot { width: 6px; height: 6px; background-color: var(--danger); border-radius: 50%; position: absolute; bottom: 4px; }
+
+    /* Profile UI */
+    .profile-avatar { width: 70px; height: 70px; background: #e0e7ff; color: var(--primary); font-size: 28px; font-weight: bold; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; }
+    .profile-info { text-align: center; margin-bottom: 16px; }
+    .profile-info h3 { font-size: 18px; color: var(--text); }
+    .profile-info p { font-size: 12px; color: var(--muted); margin-top: 2px; }
+    .profile-item { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+    .profile-item:last-child { border-bottom: none; }
+    .profile-label { color: var(--muted); }
+    .profile-value { font-weight: 600; color: var(--text); }
+
+    /* Bottom Nav */
+    .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-around; padding: 10px 0; border-top: 1px solid var(--border); max-width: 480px; margin: 0 auto; z-index: 100; }
+    .nav-item { text-align: center; color: var(--muted); font-size: 11px; text-decoration: none; cursor: pointer; flex: 1; }
+    .nav-item.active { color: var(--primary); font-weight: 700; }
+    .nav-icon { font-size: 18px; display: block; margin-bottom: 2px; }
+  </style>
+</head>
+<body>
+
+<div class="container">
+
+  <!-- AUTHENTICATION -->
+  <div id="loginView" class="card">
+    <div class="auth-header">
+      <h2>Academic Planner 🎓</h2>
+      <p style="color: var(--muted); font-size: 13px;">Masuk buat atur jadwal & tugas kuliahmu</p>
+    </div>
+    <form id="loginForm">
+      <div class="form-group">
+        <label>EMAIL / USERNAME</label>
+        <input type="email" id="loginEmail" placeholder="contoh: xxxxxx@gmail.com" required>
+      </div>
+      <div class="form-group">
+        <label>PASSWORD</label>
+        <div class="password-wrapper">
+          <input type="password" id="loginPassword" placeholder="••••••••" required>
+          <span class="toggle-password" onclick="togglePass('loginPassword', this)">👁️</span>
+        </div>
+      </div>
+      <button type="submit" class="btn">Login</button>
+      <button type="button" class="btn btn-secondary" onclick="alert('Fitur reset password dikirim ke email.')">Lupa Password?</button>
+    </form>
+    <div class="auth-toggle">
+      Belum punya akun? <span onclick="switchAuth('register')">Daftar</span>
+    </div>
+  </div>
+
+  <div id="registerView" class="card hidden">
+    <div class="auth-header">
+      <h2>Buat Akun Baru 📝</h2>
+      <p style="color: var(--muted); font-size: 13px;">Lengkapi data akademikmu</p>
+    </div>
+    <form id="registerForm">
+      <div class="form-group">
+        <label>NAMA LENGKAP</label>
+        <input type="text" id="regName" placeholder="Nama Lengkap" required>
+      </div>
+      <div class="form-group">
+        <label>NOMOR STAMBUK / NIM</label>
+        <input type="text" id="regNim" placeholder="Contoh: E321xxxx" required>
+      </div>
+      <div class="form-group">
+        <label>JURUSAN / PRODI</label>
+        <input type="text" id="regMajor" placeholder="Contoh: Agribisnis" required>
+      </div>
+      <div class="form-group">
+        <label>UNIVERSITAS / KAMPUS</label>
+        <input type="text" id="regCampus" placeholder="Contoh: Universitas Tadulako" required>
+      </div>
+      <div class="form-group">
+        <label>EMAIL</label>
+        <input type="email" id="regEmail" placeholder="xxxxxxx@gmail.com" required>
+      </div>
+      <div class="form-group">
+        <label>PASSWORD</label>
+        <div class="password-wrapper">
+          <input type="password" id="regPassword" placeholder="Minimal 6 karakter" minlength="6" required>
+          <span class="toggle-password" onclick="togglePass('regPassword', this)">👁️</span>
+        </div>
+      </div>
+      <button type="submit" class="btn">Daftar Akun</button>
+    </form>
+    <div class="auth-toggle">
+      Sudah punya akun? <span onclick="switchAuth('login')">Login</span>
+    </div>
+  </div>
+
+  <!-- VIEW 1: HOME / DASHBOARD -->
+  <div id="dashboardView" class="hidden">
+    <div class="header-user">
+      <div class="greeting">
+        <h3 id="dashUserName">Selamat Datang 👋</h3>
+        <p style="font-size: 12px; color: var(--muted);">Siap untuk produktif hari ini?</p>
+      </div>
+    </div>
+
+    <div class="semester-box">
+      <label>📌 SEMESTER AKTIF:</label>
+      <select class="activeSemesterSelect" onchange="changeActiveSemester(this.value)">
+        <option value="1">Semester 1</option>
+        <option value="2">Semester 2</option>
+        <option value="3">Semester 3</option>
+        <option value="4">Semester 4</option>
+        <option value="5">Semester 5</option>
+        <option value="6">Semester 6</option>
+        <option value="7">Semester 7</option>
+        <option value="8">Semester 8</option>
+      </select>
+    </div>
+
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div id="statPending" class="stat-num">0</div>
+        <div class="stat-label">Tugas Pending</div>
+      </div>
+      <div class="stat-card">
+        <div id="statThisWeek" class="stat-num">0</div>
+        <div class="stat-label">Deadline Minggu Ini</div>
+      </div>
+      <div class="stat-card">
+        <div id="statCourses" class="stat-num">0</div>
+        <div class="stat-label">Mata Kuliah</div>
+      </div>
+    </div>
+
+    <div class="quote-card">
+      <div class="quote-title">💡 Quote Hari Ini & Reminder</div>
+      <div class="quote-text" id="quoteReminderText">"Tetap konsisten bree, tugas dicicil dari sekarang biar kagak numpuk pas deadline!" 🚀</div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <span>📚 Ringkasan Jadwal Kuliah & Tugas</span>
+      </div>
+      <div id="courseList"></div>
+    </div>
+  </div>
+
+  <!-- VIEW 2: JADWAL KULIAH -->
+  <div id="scheduleView" class="hidden">
+    <div class="section-title" style="margin-bottom: 16px;">
+      <h2>📅 Jadwal Perkuliahan</h2>
+      <button class="btn btn-sm" onclick="toggleCourseForm()">+ Tambah Matkul</button>
+    </div>
+
+    <div class="semester-box">
+      <label>📌 SEMESTER AKTIF:</label>
+      <select class="activeSemesterSelect" onchange="changeActiveSemester(this.value)">
+        <option value="1">Semester 1</option>
+        <option value="2">Semester 2</option>
+        <option value="3">Semester 3</option>
+        <option value="4">Semester 4</option>
+        <option value="5">Semester 5</option>
+        <option value="6">Semester 6</option>
+        <option value="7">Semester 7</option>
+        <option value="8">Semester 8</option>
+      </select>
+    </div>
+
+    <div id="courseForm" class="hidden card" style="margin-bottom: 12px; padding: 12px; background: #f1f5f9; border-radius: 8px;">
+      <input type="hidden" id="courseEditId">
+      <div class="form-group">
+        <label>NAMA MATA KULIAH</label>
+        <input type="text" id="courseNameInput" placeholder="Nama Mata Kuliah (mis: Agribisnis)" required>
+      </div>
+      <div class="form-group">
+        <label>KELAS</label>
+        <input type="text" id="courseClassInput" placeholder="Kelas (mis: A / AG24)">
+      </div>
+      <div class="form-group" style="display: flex; gap: 8px;">
+        <div style="flex: 1;">
+          <label>HARI</label>
+          <select id="courseDayInput">
+            <option value="Senin">Senin</option>
+            <option value="Selasa">Selasa</option>
+            <option value="Rabu">Rabu</option>
+            <option value="Kamis">Kamis</option>
+            <option value="Jumat">Jumat</option>
+            <option value="Sabtu">Sabtu</option>
+          </select>
+        </div>
+      </div>
+      <div class="form-group">
+        <label>JAM KULIAH</label>
+        <div style="display: flex; gap: 8px; align-items: center;">
+          <input type="time" id="courseStartTimeInput" required>
+          <span style="font-size: 12px; color: var(--muted);">s/d</span>
+          <input type="time" id="courseEndTimeInput" required>
+        </div>
+      </div>
+      <button class="btn btn-sm" id="btnSaveCourse" onclick="saveCourse()" style="width: 100%;">Simpan Mata Kuliah</button>
+    </div>
+
+    <div class="day-tabs">
+      <div class="day-tab active" onclick="filterScheduleDay('Semua', this)">Semua</div>
+      <div class="day-tab" onclick="filterScheduleDay('Senin', this)">Senin</div>
+      <div class="day-tab" onclick="filterScheduleDay('Selasa', this)">Selasa</div>
+      <div class="day-tab" onclick="filterScheduleDay('Rabu', this)">Rabu</div>
+      <div class="day-tab" onclick="filterScheduleDay('Kamis', this)">Kamis</div>
+      <div class="day-tab" onclick="filterScheduleDay('Jumat', this)">Jumat</div>
+      <div class="day-tab" onclick="filterScheduleDay('Sabtu', this)">Sabtu</div>
+    </div>
+
+    <div class="card">
+      <div id="scheduleList"></div>
+    </div>
+  </div>
+
+  <!-- VIEW 3: TUGAS & DEADLINE -->
+  <div id="taskView" class="hidden">
+    <div class="section-title" style="margin-bottom: 16px;">
+      <h2>📝 Daftar Tugas Kuliah</h2>
+      <button class="btn btn-sm" onclick="toggleTaskForm()">+ Tambah Tugas</button>
+    </div>
+
+    <div class="semester-box">
+      <label>📌 SEMESTER AKTIF:</label>
+      <select class="activeSemesterSelect" onchange="changeActiveSemester(this.value)">
+        <option value="1">Semester 1</option>
+        <option value="2">Semester 2</option>
+        <option value="3">Semester 3</option>
+        <option value="4">Semester 4</option>
+        <option value="5">Semester 5</option>
+        <option value="6">Semester 6</option>
+        <option value="7">Semester 7</option>
+        <option value="8">Semester 8</option>
+      </select>
+    </div>
+
+    <div id="taskForm" class="card hidden" style="background: #f1f5f9;">
+      <input type="hidden" id="taskEditId">
+      <div class="form-group">
+        <label>MATA KULIAH</label>
+        <select id="taskCourseSelect" required></select>
+      </div>
+      <div class="form-group">
+        <label>CATATAN / DETAIL TUGAS</label>
+        <textarea id="taskDescInput" rows="3" placeholder="Detail tugas atau instruksi dosen..." required></textarea>
+      </div>
+      <div class="form-group">
+        <label>LAMPIRAN (FOTO / GAMBAR / FILE / KAMERA)</label>
+        <input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx" capture="environment">
+      </div>
+      <div class="form-group">
+        <label>DEADLINE (TANGGAL & WAKTU)</label>
+        <input type="datetime-local" id="taskDeadlineInput" required>
+      </div>
+      <button class="btn btn-sm" id="btnSaveTask" onclick="saveTask()" style="width: 100%;">Simpan Tugas</button>
+    </div>
+
+    <div class="day-tabs">
+      <div class="day-tab" id="filterTaskAllTab" onclick="filterTaskStatus('all', this)">Semua</div>
+      <div class="day-tab active" id="filterTaskPendingTab" onclick="filterTaskStatus('pending', this)">Pending ⏳</div>
+      <div class="day-tab" id="filterTaskCompletedTab" onclick="filterTaskStatus('completed', this)">Selesai ✅</div>
+    </div>
+
+    <div id="taskFilterNotice" style="font-size: 11px; color: var(--primary); font-weight: bold; margin-bottom: 8px;" class="hidden"></div>
+
+    <div class="card">
+      <div id="taskList"></div>
+    </div>
+  </div>
+
+  <!-- VIEW 4: KALENDER AKADEMIK -->
+  <div id="calendarView" class="hidden">
+    <div class="section-title" style="margin-bottom: 16px;">
+      <h2>🗓 Kalender Akademik</h2>
+    </div>
+
+    <div class="card">
+      <div class="calendar-header">
+        <button class="cal-btn" onclick="prevMonth()">◄</button>
+        <h3 id="calMonthYear">Bulan Tahun</h3>
+        <button class="cal-btn" onclick="nextMonth()">►</button>
+      </div>
+
+      <div class="calendar-weekdays">
+        <div>Min</div><div>Sen</div><div>Sel</div><div>Rab</div><div>Kam</div><div>Jum</div><div>Sab</div>
+      </div>
+
+      <div class="calendar-days" id="calendarDaysContainer"></div>
+    </div>
+
+    <div class="card">
+      <div class="section-title">
+        <span id="selectedDateTitle">📅 Tugas & Agenda Tanggal Ini</span>
+      </div>
+      <div id="selectedDateContent">
+        <p style="font-size: 12px; color: var(--muted); text-align: center; padding: 10px;">Klik salah satu tanggal di kalender buat lihat detailnya bree!</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- VIEW 5: PROFIL & PENGATURAN -->
+  <div id="profileView" class="hidden">
+    <div class="section-title" style="margin-bottom: 16px;">
+      <h2>👤 Profil Mahasiswa</h2>
+    </div>
+
+    <div class="card">
+      <div class="profile-avatar" id="profileAvatar">B</div>
+      <div class="profile-info">
+        <h3 id="profNameDisplay">-</h3>
+        <p id="profEmailDisplay">-</p>
+      </div>
+
+      <div class="profile-item">
+        <span class="profile-label">NIM</span>
+        <span class="profile-value" id="profNimDisplay">-</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Jurusan / Program Studi</span>
+        <span class="profile-value" id="profMajorDisplay">-</span>
+      </div>
+      <div class="profile-item">
+        <span class="profile-label">Universitas / Kampus</span>
+        <span class="profile-value" id="profCampusDisplay">-</span>
+      </div>
+
+      <button class="btn btn-secondary" onclick="toggleEditProfileForm()" style="margin-top: 14px;">✏️ Edit Data Akademik</button>
+    </div>
+
+    <!-- Form Edit Profil -->
+    <div id="editProfileForm" class="card hidden" style="background: #f1f5f9;">
+      <div class="section-title">
+        <span>✏️ Edit Identitas Mahasiswa</span>
+      </div>
+      <div class="form-group">
+        <label>NAMA LENGKAP</label>
+        <input type="text" id="editNameInput" required>
+      </div>
+      <div class="form-group">
+        <label>NIM</label>
+        <input type="text" id="editNimInput" placeholder="mis: E321xxxx">
+      </div>
+      <div class="form-group">
+        <label>JURUSAN / PRODI</label>
+        <input type="text" id="editMajorInput" placeholder="mis: Agribisnis">
+      </div>
+      <div class="form-group">
+        <label>UNIVERSITAS / KAMPUS</label>
+        <input type="text" id="editCampusInput" placeholder="mis: Universitas Tadulako">
+      </div>
+      <button class="btn btn-sm" onclick="saveProfileData()" style="width: 100%;">Simpan Profil</button>
+    </div>
+
+    <!-- Pengaturan Akun & Data -->
+    <div class="card">
+      <div class="section-title">
+        <span>⚙️ Pengaturan Aplikasi</span>
+      </div>
+      <button class="btn btn-secondary" onclick="toggleChangePasswordForm()">🔒 Ubah Kata Sandi</button>
+      <button class="btn btn-secondary" onclick="exportAppData()" style="margin-top: 10px;">💾 Backup / Export Data (JSON)</button>
+      <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
+        <label style="color: var(--primary);">📥 RESTORE / IMPORT DATA</label>
+        <input type="file" id="importJsonInput" accept=".json" onchange="importAppData(event)" style="font-size: 11px;">
+      </div>
+      <button class="btn btn-danger" onclick="resetAppData()" style="margin-top: 14px;">🗑 Reset Semua Data Aplikasi</button>
+      <button class="btn btn-secondary" onclick="logout()" style="margin-top: 10px;">🚪 Logout Akun</button>
+    </div>
+
+    <!-- Form Ubah Password -->
+    <div id="changePasswordForm" class="card hidden" style="background: #f1f5f9;">
+      <div class="section-title">
+        <span>🔒 Ubah Kata Sandi</span>
+      </div>
+      <div class="form-group">
+        <label>PASSWORD LAMA</label>
+        <input type="password" id="oldPasswordInput" placeholder="••••••••">
+      </div>
+      <div class="form-group">
+        <label>PASSWORD BARU</label>
+        <input type="password" id="newPasswordInput" placeholder="Minimal 6 karakter">
+      </div>
+      <button class="btn btn-sm" onclick="saveNewPassword()" style="width: 100%;">Update Password</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- Bottom Navigation Bar -->
+<div id="bottomNav" class="bottom-nav hidden">
+  <div class="nav-item active" id="navHome" onclick="switchTab('home')"><span class="nav-icon">🏠</span>Home</div>
+  <div class="nav-item" id="navSchedule" onclick="switchTab('schedule')"><span class="nav-icon">📅</span>Jadwal</div>
+  <div class="nav-item" id="navTask" onclick="switchTab('task')"><span class="nav-icon">📝</span>Tugas</div>
+  <div class="nav-item" id="navCalendar" onclick="switchTab('calendar')"><span class="nav-icon">🗓</span>Kalender</div>
+  <div class="nav-item" id="navProfile" onclick="switchTab('profile')"><span class="nav-icon">👤</span>Profil</div>
+</div>
+
+<script>
+  let usersDB = JSON.parse(localStorage.getItem('app_users')) || [];
+  let currentUser = JSON.parse(localStorage.getItem('app_current_user')) || null;
+  let coursesDB = JSON.parse(localStorage.getItem('app_courses')) || [];
+  let tasksDB = JSON.parse(localStorage.getItem('app_tasks')) || [];
+
+  const daysOrder = ["Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"];
+  let selectedScheduleDay = 'Semua';
+  let selectedTaskStatus = 'pending';
+  let selectedTaskCourseFilter = null;
+
+  let currentCalDate = new Date();
+  let selectedCalDate = null;
+
+  const quotes = [
+    '"Tetap konsisten bree, tugas dicicil dari sekarang biar kagak numpuk pas deadline!" 🚀',
+    '"Pendidikan bukan cuma soal nilai, tapi proses lu ngebentuk karakter disiplin!" 💪',
+    '"Satu tugas selesai hari ini = satu tidur nyenyak nanti malam." 😎',
+    '"Jangan tunggu mood datang, nugas dulu baru mood ikut sendiri!" 🔥'
+  ];
+
+  window.onload = function() {
+    if (currentUser) {
+      showDashboard();
+    } else {
+      switchAuth('login');
+    }
+  };
+
+  function togglePass(inputId, el) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") {
+      input.type = "text";
+      el.innerText = "🙈";
+    } else {
+      input.type = "password";
+      el.innerText = "👁";
+    }
+  }
+
+  function switchAuth(type) {
+    if (type === 'login') {
+      document.getElementById('loginView').classList.remove('hidden');
+      document.getElementById('registerView').classList.add('hidden');
+    } else {
+      document.getElementById('loginView').classList.add('hidden');
+      document.getElementById('registerView').classList.remove('hidden');
+    }
+  }
+
+  function switchTab(tabName) {
+    document.getElementById('dashboardView').classList.add('hidden');
+    document.getElementById('scheduleView').classList.add('hidden');
+    document.getElementById('taskView').classList.add('hidden');
+    document.getElementById('calendarView').classList.add('hidden');
+    document.getElementById('profileView').classList.add('hidden');
+
+    document.getElementById('navHome').classList.remove('active');
+    document.getElementById('navSchedule').classList.remove('active');
+    document.getElementById('navTask').classList.remove('active');
+    document.getElementById('navCalendar').classList.remove('active');
+    document.getElementById('navProfile').classList.remove('active');
+
+    if (tabName === 'home') {
+      document.getElementById('dashboardView').classList.remove('hidden');
+      document.getElementById('navHome').classList.add('active');
+      renderCourses();
+      updateDashboardStats();
+      displayRandomQuote();
+    } else if (tabName === 'schedule') {
+      document.getElementById('scheduleView').classList.remove('hidden');
+      document.getElementById('navSchedule').classList.add('active');
+      renderScheduleView();
+    } else if (tabName === 'task') {
+      document.getElementById('taskView').classList.remove('hidden');
+      document.getElementById('navTask').classList.add('active');
+      populateTaskCourseSelect();
+      renderTaskView();
+    } else if (tabName === 'calendar') {
+      document.getElementById('calendarView').classList.remove('hidden');
+      document.getElementById('navCalendar').classList.add('active');
+      renderCalendar();
+    } else if (tabName === 'profile') {
+      document.getElementById('profileView').classList.remove('hidden');
+      document.getElementById('navProfile').classList.add('active');
+      renderProfileView();
+    }
+  }
+
+  function displayRandomQuote() {
+    const randomQuote = quotes[Math.floor(Math.random() * quotes.length)];
+    const quoteEl = document.getElementById('quoteReminderText');
+    if (quoteEl) quoteEl.innerText = randomQuote;
+  }
+
+  function goToTaskForCourse(courseName) {
+    selectedTaskCourseFilter = courseName;
+    selectedTaskStatus = 'pending';
+    switchTab('task');
+  }
+
+  document.getElementById('registerForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const name = document.getElementById('regName').value;
+    const nim = document.getElementById('regNim').value;
+    const major = document.getElementById('regMajor').value;
+    const campus = document.getElementById('regCampus').value;
+    const email = document.getElementById('regEmail').value;
+    const password = document.getElementById('regPassword').value;
+
+    if (usersDB.some(u => u.email === email)) {
+      alert('Email sudah terdaftar!');
+      return;
+    }
+
+    const newUser = { 
+      id: Date.now(), 
+      name, 
+      email, 
+      activeSemester: 1, 
+      password,
+      nim,
+      major,
+      campus
+    };
+    usersDB.push(newUser);
+    localStorage.setItem('app_users', JSON.stringify(usersDB));
+    
+    currentUser = newUser;
+    localStorage.setItem('app_current_user', JSON.stringify(currentUser));
+    
+    showDashboard();
+  });
+
+  document.getElementById('loginForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    const email = document.getElementById('loginEmail').value;
+    const password = document.getElementById('loginPassword').value;
+
+    const user = usersDB.find(u => u.email === email && u.password === password);
+    if (!user) {
+      alert('Email atau password salah!');
+      return;
+    }
+
+    currentUser = user;
+    localStorage.setItem('app_current_user', JSON.stringify(currentUser));
+    showDashboard();
+  });
+
+  function showDashboard() {
+    document.getElementById('loginView').classList.add('hidden');
+    document.getElementById('registerView').classList.add('hidden');
+    document.getElementById('bottomNav').classList.remove('hidden');
+
+    document.getElementById('dashUserName').innerText = `Selamat datang, ${currentUser.name} 👋`;
+    
+    document.querySelectorAll('.activeSemesterSelect').forEach(sel => {
+      sel.value = currentUser.activeSemester;
+    });
+
+    switchTab('home');
+  }
+
+  function changeActiveSemester(newSemester) {
+    currentUser.activeSemester = parseInt(newSemester);
+    
+    localStorage.setItem('app_current_user', JSON.stringify(currentUser));
+    const idx = usersDB.findIndex(u => u.id === currentUser.id);
+    if (idx !== -1) {
+      usersDB[idx].activeSemester = currentUser.activeSemester;
+      localStorage.setItem('app_users', JSON.stringify(usersDB));
+    }
+
+    document.querySelectorAll('.activeSemesterSelect').forEach(sel => {
+      sel.value = currentUser.activeSemester;
+    });
+
+    selectedTaskCourseFilter = null;
+    renderCourses();
+    renderScheduleView();
+    renderTaskView();
+    updateDashboardStats();
+    if (!document.getElementById('calendarView').classList.contains('hidden')) {
+      renderCalendar();
+    }
+  }
+
+  // ================= DISPLAY HOME =================
+  function renderCourses() {
+    const activeSem = currentUser.activeSemester;
+    const filteredCourses = coursesDB.filter(
+      c => c.userId === currentUser.id && c.semester === activeSem
+    );
+
+    const listContainer = document.getElementById('courseList');
+    if (filteredCourses.length === 0) {
+      listContainer.innerHTML = `<p style="font-size: 12px; color: var(--muted); text-align: center; padding: 10px;">Belum ada mata kuliah di Semester ${activeSem}. Tambahkan dulu di tab Jadwal!</p>`;
+      return;
+    }
+
+    filteredCourses.sort((a, b) => {
+      const dayDiff = daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day);
+      if (dayDiff !== 0) return dayDiff;
+      return a.startTime.localeCompare(b.startTime);
+    });
+
+    let html = '';
+    let currentDay = '';
+
+    filteredCourses.forEach(c => {
+      if (c.day !== currentDay) {
+        currentDay = c.day;
+        html += `<div class="day-header">📆 ${currentDay}</div>`;
+      }
+
+      const pendingTasksForCourse = tasksDB.filter(
+        t => t.userId === currentUser.id && 
+             t.semester === activeSem && 
+             t.courseName === c.name && 
+             !t.isCompleted
+      );
+
+      pendingTasksForCourse.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+      let taskWidgetHtml = '';
+      if (pendingTasksForCourse.length > 0) {
+        const nearestTask = pendingTasksForCourse[0];
+        const dateObj = new Date(nearestTask.deadline);
+        const formattedDate = dateObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        
+        taskWidgetHtml = `
+          <div class="home-task-box">
+            <div class="home-task-title">⏰ Deadline Terdekat (${pendingTasksForCourse.length} Tugas Pending):</div>
+            <div class="home-task-desc">📌 <b>${nearestTask.desc}</b></div>
+            <div style="font-size: 10px; color: #ef4444; font-weight: 700; margin-top: 2px;">⏳ Batas: ${formattedDate}</div>
+          </div>
+        `;
+      } else {
+        taskWidgetHtml = `
+          <div class="home-task-none">✅ Aman, gak ada tugas pending!</div>
+        `;
+      }
+
+      html += `
+        <div class="item-card">
+          <div style="flex: 1;">
+            <div class="item-title">${c.name} (Kelas ${c.class})</div>
+            <div class="item-sub">🕒 ${c.startTime} - ${c.endTime}</div>
+            ${taskWidgetHtml}
+          </div>
+        </div>
+      `;
+    });
+
+    listContainer.innerHTML = html;
+  }
+
+  // ================= SCHEDULE FUNCTIONS =================
+  function toggleCourseForm() {
+    document.getElementById('courseEditId').value = '';
+    document.getElementById('courseNameInput').value = '';
+    document.getElementById('courseClassInput').value = '';
+    document.getElementById('courseStartTimeInput').value = '';
+    document.getElementById('courseEndTimeInput').value = '';
+    document.getElementById('btnSaveCourse').innerText = 'Simpan Mata Kuliah';
+    document.getElementById('courseForm').classList.toggle('hidden');
+  }
+
+  function saveCourse() {
+    const editId = document.getElementById('courseEditId').value;
+    const name = document.getElementById('courseNameInput').value;
+    const courseClass = document.getElementById('courseClassInput').value;
+    const day = document.getElementById('courseDayInput').value;
+    const startTime = document.getElementById('courseStartTimeInput').value;
+    const endTime = document.getElementById('courseEndTimeInput').value;
+
+    if (!name || !startTime || !endTime) {
+      alert('Nama mata kuliah dan jam wajib diisi, bree!');
+      return;
+    }
+
+    if (editId) {
+      const idx = coursesDB.findIndex(c => c.id === parseInt(editId));
+      if (idx !== -1) {
+        coursesDB[idx].name = name;
+        coursesDB[idx].class = courseClass || '-';
+        coursesDB[idx].day = day;
+        coursesDB[idx].startTime = startTime;
+        coursesDB[idx].endTime = endTime;
+      }
+    } else {
+      const newCourse = {
+        id: Date.now(),
+        userId: currentUser.id,
+        semester: currentUser.activeSemester,
+        name: name,
+        class: courseClass || '-',
+        day: day,
+        startTime: startTime,
+        endTime: endTime
+      };
+      coursesDB.push(newCourse);
+    }
+
+    localStorage.setItem('app_courses', JSON.stringify(coursesDB));
+    toggleCourseForm();
+    renderCourses();
+    renderScheduleView();
+    updateDashboardStats();
+  }
+
+  function editCourse(id) {
+    const course = coursesDB.find(c => c.id === id);
+    if (!course) return;
+
+    switchTab('schedule');
+    document.getElementById('courseEditId').value = course.id;
+    document.getElementById('courseNameInput').value = course.name;
+    document.getElementById('courseClassInput').value = course.class;
+    document.getElementById('courseDayInput').value = course.day;
+    document.getElementById('courseStartTimeInput').value = course.startTime;
+    document.getElementById('courseEndTimeInput').value = course.endTime;
+
+    document.getElementById('btnSaveCourse').innerText = 'Update Mata Kuliah';
+    document.getElementById('courseForm').classList.remove('hidden');
+  }
+
+  function filterScheduleDay(day, el) {
+    selectedScheduleDay = day;
+    document.querySelectorAll('#scheduleView .day-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderScheduleView();
+  }
+
+  function renderScheduleView() {
+    const activeSem = currentUser.activeSemester;
+    let filteredCourses = coursesDB.filter(
+      c => c.userId === currentUser.id && c.semester === activeSem
+    );
+
+    if (selectedScheduleDay !== 'Semua') {
+      filteredCourses = filteredCourses.filter(c => c.day === selectedScheduleDay);
+    }
+
+    const scheduleContainer = document.getElementById('scheduleList');
+    if (filteredCourses.length === 0) {
+      scheduleContainer.innerHTML = `<p style="font-size: 12px; color: var(--muted); text-align: center; padding: 16px;">Tidak ada jadwal kuliah ${selectedScheduleDay !== 'Semua' ? 'hari ' + selectedScheduleDay : ''} di Semester ${activeSem}.</p>`;
+      return;
+    }
+
+    filteredCourses.sort((a, b) => {
+      const dayDiff = daysOrder.indexOf(a.day) - daysOrder.indexOf(b.day);
+      if (dayDiff !== 0) return dayDiff;
+      return a.startTime.localeCompare(b.startTime);
+    });
+
+    let html = '';
+    let currentDay = '';
+
+    filteredCourses.forEach(c => {
+      if (selectedScheduleDay === 'Semua' && c.day !== currentDay) {
+        currentDay = c.day;
+        html += `<div class="day-header">📆 Hari ${currentDay}</div>`;
+      }
+
+      html += `
+        <div class="item-card item-clickable" onclick="goToTaskForCourse('${c.name}')">
+          <div style="flex: 1;">
+            <div class="item-title">${c.name}</div>
+            <div class="item-sub">📍 Kelas: ${c.class} | 🕒 ${c.startTime} - ${c.endTime}</div>
+            <div class="item-sub" style="color: var(--primary); font-weight: 600; margin-top: 4px;">👉 Klik buat kelola tugas matkul ini</div>
+          </div>
+          <div class="action-btns" onclick="event.stopPropagation()">
+            <button class="action-btn" onclick="editCourse(${c.id})">✏️</button>
+            <button class="action-btn" onclick="deleteCourse(${c.id})">🗑</button>
+          </div>
+        </div>
+      `;
+    });
+
+    scheduleContainer.innerHTML = html;
+  }
+
+  function deleteCourse(id) {
+    if(!confirm('Yakin mau hapus matkul ini, bree?')) return;
+    coursesDB = coursesDB.filter(c => c.id !== id);
+    localStorage.setItem('app_courses', JSON.stringify(coursesDB));
+    renderCourses();
+    renderScheduleView();
+    updateDashboardStats();
+  }
+
+  // ================= TASK FUNCTIONS =================
+  function toggleTaskForm() {
+    document.getElementById('taskEditId').value = '';
+    document.getElementById('taskDescInput').value = '';
+    document.getElementById('taskFileInput').value = '';
+    document.getElementById('taskDeadlineInput').value = '';
+    document.getElementById('btnSaveTask').innerText = 'Simpan Tugas';
+    document.getElementById('taskForm').classList.toggle('hidden');
+  }
+
+  function populateTaskCourseSelect() {
+    const activeSem = currentUser.activeSemester;
+    const userCourses = coursesDB.filter(c => c.userId === currentUser.id && c.semester === activeSem);
+    const select = document.getElementById('taskCourseSelect');
+
+    if (userCourses.length === 0) {
+      select.innerHTML = `<option value="">-- Tambah Matkul Dulu di Jadwal --</option>`;
+      return;
+    }
+
+    select.innerHTML = userCourses.map(c => `<option value="${c.name}">${c.name} (Kelas ${c.class})</option>`).join('');
+  }
+
+  function saveTask() {
+    const editId = document.getElementById('taskEditId').value;
+    const courseName = document.getElementById('taskCourseSelect').value;
+    const desc = document.getElementById('taskDescInput').value;
+    const deadline = document.getElementById('taskDeadlineInput').value;
+    const fileInput = document.getElementById('taskFileInput');
+
+    if (!courseName || !desc || !deadline) {
+      alert('Mohon isi mata kuliah, detail tugas, dan deadline, bree!');
+      return;
+    }
+
+    const file = fileInput.files[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = function(e) {
+        const fileData = {
+          name: file.name,
+          type: file.type,
+          src: e.target.result
+        };
+        processSaveTask(editId, courseName, desc, deadline, fileData);
+      };
+      reader.readAsDataURL(file);
+    } else {
+      let existingFile = null;
+      if (editId) {
+        const oldTask = tasksDB.find(t => t.id === parseInt(editId));
+        if (oldTask) existingFile = oldTask.attachment;
+      }
+      processSaveTask(editId, courseName, desc, deadline, existingFile);
+    }
+  }
+
+  function processSaveTask(editId, courseName, desc, deadline, fileData) {
+    if (editId) {
+      const idx = tasksDB.findIndex(t => t.id === parseInt(editId));
+      if (idx !== -1) {
+        tasksDB[idx].courseName = courseName;
+        tasksDB[idx].desc = desc;
+        tasksDB[idx].deadline = deadline;
+        tasksDB[idx].attachment = fileData;
+      }
+    } else {
+      const newTask = {
+        id: Date.now(),
+        userId: currentUser.id,
+        semester: currentUser.activeSemester,
+        courseName: courseName,
+        desc: desc,
+        deadline: deadline,
+        attachment: fileData,
+        isCompleted: false
+      };
+      tasksDB.push(newTask);
+    }
+
+    localStorage.setItem('app_tasks', JSON.stringify(tasksDB));
+    toggleTaskForm();
+    renderTaskView();
+    renderCourses();
+    updateDashboardStats();
+  }
+
+  function editTask(taskId) {
+    const task = tasksDB.find(t => t.id === taskId);
+    if (!task) return;
+
+    populateTaskCourseSelect();
+    document.getElementById('taskEditId').value = task.id;
+    document.getElementById('taskCourseSelect').value = task.courseName;
+    document.getElementById('taskDescInput').value = task.desc;
+    document.getElementById('taskDeadlineInput').value = task.deadline;
+
+    document.getElementById('btnSaveTask').innerText = 'Update Tugas';
+    document.getElementById('taskForm').classList.remove('hidden');
+  }
+
+  function filterTaskStatus(status, el) {
+    selectedTaskStatus = status;
+    selectedTaskCourseFilter = null; 
+
+    document.querySelectorAll('#taskView .day-tab').forEach(t => t.classList.remove('active'));
+    el.classList.add('active');
+    renderTaskView();
+  }
+
+  function toggleTaskComplete(taskId) {
+    const task = tasksDB.find(t => t.id === taskId);
+    if (task) {
+      task.isCompleted = !task.isCompleted;
+      localStorage.setItem('app_tasks', JSON.stringify(tasksDB));
+      renderTaskView();
+      renderCourses();
+      updateDashboardStats();
+    }
+  }
+
+  function deleteTask(taskId) {
+    if(!confirm('Yakin mau hapus tugas ini, bree?')) return;
+    tasksDB = tasksDB.filter(t => t.id !== taskId);
+    localStorage.setItem('app_tasks', JSON.stringify(tasksDB));
+    renderTaskView();
+    renderCourses();
+    updateDashboardStats();
+  }
+
+  function renderTaskView() {
+    const activeSem = currentUser.activeSemester;
+    let filteredTasks = tasksDB.filter(t => t.userId === currentUser.id && t.semester === activeSem);
+
+    const noticeEl = document.getElementById('taskFilterNotice');
+    if (selectedTaskCourseFilter) {
+      filteredTasks = filteredTasks.filter(t => t.courseName === selectedTaskCourseFilter);
+      noticeEl.innerText = `🔍 Menampilkan tugas matkul: ${selectedTaskCourseFilter} (Klik tab "Semua" buat reset)`;
+      noticeEl.classList.remove('hidden');
+    } else {
+      noticeEl.classList.add('hidden');
+    }
+
+    if (selectedTaskStatus === 'pending') {
+      filteredTasks = filteredTasks.filter(t => !t.isCompleted);
+    } else if (selectedTaskStatus === 'completed') {
+      filteredTasks = filteredTasks.filter(t => t.isCompleted);
+    }
+
+    document.querySelectorAll('#taskView .day-tab').forEach(t => t.classList.remove('active'));
+    if (selectedTaskStatus === 'all') document.getElementById('filterTaskAllTab').classList.add('active');
+    else if (selectedTaskStatus === 'pending') document.getElementById('filterTaskPendingTab').classList.add('active');
+    else if (selectedTaskStatus === 'completed') document.getElementById('filterTaskCompletedTab').classList.add('active');
+
+    const taskContainer = document.getElementById('taskList');
+    if (filteredTasks.length === 0) {
+      taskContainer.innerHTML = `<p style="font-size: 12px; color: var(--muted); text-align: center; padding: 16px;">Tidak ada tugas di Semester ${activeSem}. Aman bree!</p>`;
+      return;
+    }
+
+    filteredTasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
+
+    taskContainer.innerHTML = filteredTasks.map(t => {
+      const dateObj = new Date(t.deadline);
+      const formattedDate = dateObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+
+      let fileMarkup = '';
+      if (t.attachment) {
+        if (t.attachment.type.startsWith('image/')) {
+          fileMarkup = `<img src="${t.attachment.src}" class="attachment-preview" alt="Lampiran">`;
+        } else {
+          fileMarkup = `<div class="item-sub" style="margin-top: 4px;"><a href="${t.attachment.src}" download="${t.attachment.name}" style="color: var(--primary); font-weight: 600;">📎 ${t.attachment.name}</a></div>`;
+        }
+      }
+
+      return `
+        <div class="item-card ${t.isCompleted ? 'task-completed' : ''}">
+          <input type="checkbox" class="task-checkbox" ${t.isCompleted ? 'checked' : ''} onchange="toggleTaskComplete(${t.id})">
+          <div style="flex: 1;">
+            <div class="item-title">📚 <b>${t.courseName}</b></div>
+            <div class="item-sub" style="font-size: 12px; color: #334155; margin-top: 2px;">${t.desc}</div>
+            ${fileMarkup}
+            <div class="badge-deadline">⏰ ${formattedDate}</div>
+          </div>
+          <div class="action-btns">
+            <button class="action-btn" onclick="editTask(${t.id})">✏️</button>
+            <button class="action-btn" onclick="deleteTask(${t.id})">🗑</button>
+          </div>
+        </div>
+      `;
+    }).join('');
+  }
+
+  // ================= CALENDAR FUNCTIONS =================
+  function prevMonth() {
+    currentCalDate.setMonth(currentCalDate.getMonth() - 1);
+    renderCalendar();
+  }
+
+  function nextMonth() {
+    currentCalDate.setMonth(currentCalDate.getMonth() + 1);
+    renderCalendar();
+  }
+
+  function renderCalendar() {
+    const year = currentCalDate.getFullYear();
+    const month = currentCalDate.getMonth();
+
+    const monthNames = ["Januari", "Februari", "Maret", "April", "Mei", "Juni", "Juli", "Agustus", "September", "Oktober", "November", "Desember"];
+    document.getElementById('calMonthYear').innerText = `${monthNames[month]} ${year}`;
+
+    const firstDayIndex = new Date(year, month, 1).getDay();
+    const totalDays = new Date(year, month + 1, 0).getDate();
+
+    const container = document.getElementById('calendarDaysContainer');
+    container.innerHTML = '';
+
+    for (let i = 0; i < firstDayIndex; i++) {
+      container.innerHTML += `<div class="cal-day empty"></div>`;
+    }
+
+    const activeSem = currentUser.activeSemester;
+    const userTasks = tasksDB.filter(t => t.userId === currentUser.id && t.semester === activeSem && !t.isCompleted);
+
+    const today = new Date();
+
+    for (let day = 1; day <= totalDays; day++) {
+      const fullDateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+      
+      const isToday = today.getFullYear() === year && today.getMonth() === month && today.getDate() === day;
+      const isSelected = selectedCalDate === fullDateStr;
+
+      const hasTask = userTasks.some(t => {
+        const taskDate = t.deadline.split('T')[0];
+        return taskDate === fullDateStr;
+      });
+
+      let dayClasses = 'cal-day';
+      if (isToday) dayClasses += ' today';
+      if (isSelected) dayClasses += ' selected';
+
+      const dotHtml = hasTask ? `<div class="cal-dot"></div>` : '';
+
+      container.innerHTML += `
+        <div class="${dayClasses}" onclick="selectCalDate('${fullDateStr}')">
+          <span>${day}</span>
+          ${dotHtml}
+        </div>
+      `;
+    }
+  }
+
+  function selectCalDate(dateStr) {
+    selectedCalDate = dateStr;
+    renderCalendar();
+
+    const dateObj = new Date(dateStr);
+    const formattedDate = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('selectedDateTitle').innerText = `📅 Agenda: ${formattedDate}`;
+
+    const activeSem = currentUser.activeSemester;
+    const tasksOnDate = tasksDB.filter(t => t.userId === currentUser.id && t.semester === activeSem && t.deadline.split('T')[0] === dateStr);
+
+    const contentContainer = document.getElementById('selectedDateContent');
+    if (tasksOnDate.length === 0) {
+      contentContainer.innerHTML = `<p style="font-size: 12px; color: var(--muted); text-align: center; padding: 12px;">Gak ada deadline tugas di tanggal ini bree. Relaks! 😎</p>`;
+      return;
+    }
+
+    contentContainer.innerHTML = tasksOnDate.map(t => `
+      <div class="item-card ${t.isCompleted ? 'task-completed' : ''}">
+        <div style="flex: 1;">
+          <div class="item-title">📚 <b>${t.courseName}</b></div>
+          <div class="item-sub" style="font-size: 12px; color: #334155; margin-top: 2px;">${t.desc}</div>
+          <div class="badge-deadline">⏰ Jam ${t.deadline.split('T')[1]}</div>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  // ================= PROFILE & SETTINGS =================
+  function renderProfileView() {
+    if (!currentUser) return;
+
+    const initial = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U';
+    document.getElementById('profileAvatar').innerText = initial;
+    document.getElementById('profNameDisplay').innerText = currentUser.name || '-';
+    document.getElementById('profEmailDisplay').innerText = currentUser.email || '-';
+    
+    // TAMPILKAN NIM ASLI TANPA MASKING DI SINI
+    document.getElementById('profNimDisplay').innerText = currentUser.nim || '-';
+    document.getElementById('profMajorDisplay').innerText = currentUser.major || '-';
+    document.getElementById('profCampusDisplay').innerText = currentUser.campus || '-';
+  }
+
+  function toggleEditProfileForm() {
+    document.getElementById('editNameInput').value = currentUser.name || '';
+    document.getElementById('editNimInput').value = currentUser.nim || '';
+    document.getElementById('editMajorInput').value = currentUser.major || '';
+    document.getElementById('editCampusInput').value = currentUser.campus || '';
+    document.getElementById('editProfileForm').classList.toggle('hidden');
+  }
+
+  function saveProfileData() {
+    const name = document.getElementById('editNameInput').value;
+    const nim = document.getElementById('editNimInput').value;
+    const major = document.getElementById('editMajorInput').value;
+    const campus = document.getElementById('editCampusInput').value;
+
+    if (!name) {
+      alert('Nama tidak boleh kosong, bree!');
+      return;
+    }
+
+    currentUser.name = name;
+    currentUser.nim = nim;
+    currentUser.major = major;
+    currentUser.campus = campus;
+
+    localStorage.setItem('app_current_user', JSON.stringify(currentUser));
+    
+    const idx = usersDB.findIndex(u => u.id === currentUser.id);
+    if (idx !== -1) {
+      usersDB[idx] = currentUser;
+      localStorage.setItem('app_users', JSON.stringify(usersDB));
+    }
+
+    toggleEditProfileForm();
+    renderProfileView();
+    document.getElementById('dashUserName').innerText = `Selamat datang, ${currentUser.name} 👋`;
+    alert('Data profil berhasil diperbarui! 🎉');
+  }
+
+  function toggleChangePasswordForm() {
+    document.getElementById('oldPasswordInput').value = '';
+    document.getElementById('newPasswordInput').value = '';
+    document.getElementById('changePasswordForm').classList.toggle('hidden');
+  }
+
+  function saveNewPassword() {
+    const oldPass = document.getElementById('oldPasswordInput').value;
+    const newPass = document.getElementById('newPasswordInput').value;
+
+    if (oldPass !== currentUser.password) {
+      alert('Password lama kamu salah, bree!');
+      return;
+    }
+
+    if (!newPass || newPass.length < 6) {
+      alert('Password baru minimal 6 karakter!');
+      return;
+    }
+
+    currentUser.password = newPass;
+    localStorage.setItem('app_current_user', JSON.stringify(currentUser));
+
+    const idx = usersDB.findIndex(u => u.id === currentUser.id);
+    if (idx !== -1) {
+      usersDB[idx].password = newPass;
+      localStorage.setItem('app_users', JSON.stringify(usersDB));
+    }
+
+    toggleChangePasswordForm();
+    alert('Password berhasil diperbarui! 🔑');
+  }
+
+  // ================= EXPORT & IMPORT DATA =================
+  function exportAppData() {
+    const backupData = {
+      users: JSON.parse(localStorage.getItem('app_users')) || [],
+      currentUser: currentUser,
+      courses: JSON.parse(localStorage.getItem('app_courses')) || [],
+      tasks: JSON.parse(localStorage.getItem('app_tasks')) || []
+    };
+
+    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
+    const downloadAnchor = document.createElement('a');
+    downloadAnchor.setAttribute("href", dataStr);
+    downloadAnchor.setAttribute("download", `academic_planner_backup_${currentUser.name.replace(/\s+/g, '_')}.json`);
+    document.body.appendChild(downloadAnchor);
+    downloadAnchor.click();
+    downloadAnchor.remove();
+    alert('Mantap bree! File backup data berhasil di-download 💾🎉');
+  }
+
+  function importAppData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+      try {
+        const importedData = JSON.parse(e.target.result);
+        
+        if (!importedData.users || !importedData.courses || !importedData.tasks) {
+          alert('Format file JSON tidak valid, bree!');
+          return;
+        }
+
+        localStorage.setItem('app_users', JSON.stringify(importedData.users));
+        localStorage.setItem('app_courses', JSON.stringify(importedData.courses));
+        localStorage.setItem('app_tasks', JSON.stringify(importedData.tasks));
+        
+        if (importedData.currentUser) {
+          localStorage.setItem('app_current_user', JSON.stringify(importedData.currentUser));
+          currentUser = importedData.currentUser;
+        }
+
+        alert('Data berhasil di-restore dari backup! Halaman bakal di-refresh otomatis ya bree 🚀');
+        location.reload();
+      } catch (err) {
+        alert('Gagal membaca file JSON, pastikan file-nya bener!');
+        console.error(err);
+      }
+    };
+    reader.readAsText(file);
+  }
+
+  function resetAppData() {
+    if (!confirm('PERINGATAN: Semua jadwal dan tugas kamu bakal dihapus permanen! Yakin mau reset, bree?')) return;
+    
+    coursesDB = coursesDB.filter(c => c.userId !== currentUser.id);
+    tasksDB = tasksDB.filter(t => t.userId !== currentUser.id);
+
+    localStorage.setItem('app_courses', JSON.stringify(coursesDB));
+    localStorage.setItem('app_tasks', JSON.stringify(tasksDB));
+
+    switchTab('home');
+    alert('Semua data berhasil direset dari nol! 👌');
+  }
+
+  function updateDashboardStats() {
+    const activeSem = currentUser.activeSemester;
+    
+    const userCourses = coursesDB.filter(c => c.userId === currentUser.id && c.semester === activeSem);
+    document.getElementById('statCourses').innerText = userCourses.length;
+
+    const userTasks = tasksDB.filter(t => t.userId === currentUser.id && t.semester === activeSem);
+    const pendingTasks = userTasks.filter(t => !t.isCompleted);
+    document.getElementById('statPending').innerText = pendingTasks.length;
+
+    const now = new Date();
+    const nextWeek = new Date();
+    nextWeek.setDate(now.getDate() + 7);
+
+    const thisWeekTasks = pendingTasks.filter(t => {
+      const d = new Date(t.deadline);
+      return d >= now && d <= nextWeek;
+    });
+
+    document.getElementById('statThisWeek').innerText = thisWeekTasks.length;
+  }
+
+  function logout() {
+    currentUser = null;
+    localStorage.removeItem('app_current_user');
+    document.getElementById('dashboardView').classList.add('hidden');
+    document.getElementById('scheduleView').classList.add('hidden');
+    document.getElementById('taskView').classList.add('hidden');
+    document.getElementById('calendarView').classList.add('hidden');
+    document.getElementById('profileView').classList.add('hidden');
+    document.getElementById('bottomNav').classList.add('hidden');
+    switchAuth('login');
+  }
+</script>
+
+</body>
+</html>
