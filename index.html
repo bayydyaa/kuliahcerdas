@@ -75,7 +75,6 @@
       box-shadow: 0 4px 12px rgba(0,0,0,0.15);
     }
 
-    /* Glassmorphism & Smooth Animation Views */
     .card { 
       background: var(--card-bg-solid); 
       backdrop-filter: blur(12px);
@@ -116,7 +115,6 @@
     .password-wrapper input { padding-right: 40px; }
     .toggle-password { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); cursor: pointer; user-select: none; font-size: 16px; opacity: 0.7; }
 
-    /* Image Upload Preview for Register */
     .avatar-upload-container { display: flex; flex-direction: column; align-items: center; margin-bottom: 14px; }
     .avatar-preview-circle { width: 70px; height: 70px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 24px; font-weight: bold; overflow: hidden; border: 2px dashed var(--border); margin-bottom: 8px; cursor: pointer; }
     .avatar-preview-circle img { width: 100%; height: 100%; object-fit: cover; }
@@ -135,7 +133,6 @@
     .auth-toggle { text-align: center; margin-top: 16px; font-size: 13px; color: var(--muted); }
     .auth-toggle span { color: var(--primary); font-weight: 700; cursor: pointer; }
 
-    /* Header & Semester Switcher */
     .header-user { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
     .greeting h3 { font-size: 22px; font-weight: 800; color: var(--text); letter-spacing: -0.5px; }
     
@@ -150,12 +147,10 @@
 
     .section-title { font-size: 15px; font-weight: 800; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center; color: var(--text); }
 
-    /* Quote Widget */
     .quote-card { background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; padding: 18px; border-radius: 16px; margin-bottom: 16px; box-shadow: 0 10px 20px -5px rgba(99, 102, 241, 0.4); }
     .quote-title { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; opacity: 0.85; margin-bottom: 6px; font-weight: 800; }
     .quote-text { font-size: 14px; font-style: italic; font-weight: 600; line-height: 1.5; color: #ffffff; }
 
-    /* Items Card */
     .day-header { font-size: 12px; font-weight: 800; color: var(--semester-text); background: var(--semester-bg); padding: 6px 12px; border-radius: 8px; margin-top: 12px; margin-bottom: 8px; border: 1px solid var(--semester-border); letter-spacing: 0.5px; }
     .item-card { display: flex; justify-content: space-between; align-items: flex-start; padding: 14px; border-bottom: 1px solid var(--border); gap: 10px; }
     .item-card:last-child { border-bottom: none; }
@@ -164,19 +159,27 @@
     .item-title { font-size: 14px; font-weight: 700; color: var(--text); }
     .item-sub { font-size: 12px; color: var(--muted); margin-top: 3px; font-weight: 500; }
 
-    /* Home Task Box */
     .home-task-box { background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 8px; padding: 10px; margin-top: 8px; }
     .home-task-title { font-size: 11px; font-weight: 800; color: #f87171; display: flex; align-items: center; gap: 4px; }
     .home-task-desc { font-size: 12px; color: var(--text); margin-top: 2px; font-weight: 600; }
     .home-task-none { font-size: 11px; color: var(--success); font-weight: 700; margin-top: 6px; display: flex; align-items: center; gap: 4px; }
 
-    /* Tabs */
+    /* Badge Countdown Hitung Mundur 10 Menit Mau Masuk */
+    .home-countdown-box { background: rgba(245, 158, 11, 0.12); border: 1px solid rgba(245, 158, 11, 0.35); border-radius: 8px; padding: 10px; margin-top: 8px; animation: pulseCountdown 2s infinite; }
+    .home-countdown-title { font-size: 11px; font-weight: 800; color: #f59e0b; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
+    .home-countdown-desc { font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 700; }
+    .countdown-timer-badge { font-size: 10px; background: #f59e0b; color: white; padding: 2px 6px; border-radius: 6px; font-weight: 800; }
+    @keyframes pulseCountdown {
+      0% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.2); }
+      70% { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0); }
+      100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0); }
+    }
+
     .day-tabs { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 8px; margin-bottom: 12px; scrollbar-width: none; }
     .day-tabs::-webkit-scrollbar { display: none; }
     .day-tab { padding: 8px 16px; background: var(--card-bg-solid); border-radius: 20px; font-size: 12px; font-weight: 700; color: var(--muted); cursor: pointer; white-space: nowrap; border: 1px solid var(--border); }
     .day-tab.active { background: var(--primary); color: white; box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4); border-color: transparent; }
 
-    /* Task Specific */
     .task-checkbox { width: 20px; height: 20px; cursor: pointer; accent-color: var(--primary); margin-top: 2px; border-radius: 4px; }
     .task-completed .item-title { text-decoration: line-through; color: var(--muted); opacity: 0.7; }
     .badge-deadline { font-size: 11px; padding: 3px 8px; border-radius: 6px; font-weight: 700; background: var(--badge-bg); color: var(--badge-text); display: inline-block; margin-top: 6px; }
@@ -186,7 +189,6 @@
     .action-btn { background: var(--card-bg-solid); border: 1px solid var(--border); width: 30px; height: 30px; border-radius: 8px; cursor: pointer; font-size: 13px; display: flex; align-items: center; justify-content: center; color: var(--text); }
     .action-btn:hover { background: var(--item-hover); }
 
-    /* Calendar Style */
     .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
     .calendar-header h3 { font-size: 16px; color: var(--primary); font-weight: 800; }
     .cal-btn { background: var(--semester-bg); color: var(--semester-text); border: 1px solid var(--semester-border); width: 32px; height: 32px; border-radius: 8px; cursor: pointer; font-weight: bold; }
@@ -200,7 +202,6 @@
     .cal-day.selected { background: var(--primary); color: white; border-color: var(--primary); box-shadow: 0 4px 10px rgba(99, 102, 241, 0.3); }
     .cal-dot { width: 6px; height: 6px; background-color: var(--danger); border-radius: 50%; position: absolute; bottom: 6px; }
 
-    /* Profile UI */
     .profile-avatar { width: 75px; height: 75px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: white; font-size: 30px; font-weight: 800; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 12px auto; box-shadow: 0 8px 16px rgba(99, 102, 241, 0.3); overflow: hidden; }
     .profile-avatar img { width: 100%; height: 100%; object-fit: cover; }
     .profile-info { text-align: center; margin-bottom: 18px; }
@@ -211,7 +212,6 @@
     .profile-label { color: var(--muted); font-weight: 600; }
     .profile-value { font-weight: 700; color: var(--text); }
 
-    /* Bottom Nav */
     .bottom-nav { 
       position: fixed; bottom: 12px; left: 16px; right: 16px; 
       background: var(--nav-bg); 
@@ -230,7 +230,6 @@
 </head>
 <body>
 
-<!-- TOMBOL SWITCH MODE GELAP / TERANG -->
 <button class="theme-toggle-btn" id="themeToggleBtn" onclick="toggleTheme()" title="Ganti Mode">🌙</button>
 
 <div class="container">
@@ -267,7 +266,6 @@
       <p style="color: var(--muted); font-size: 13px; margin-top: 4px;">Lengkapi data akademikmu</p>
     </div>
     <form id="registerForm">
-      <!-- UPLOAD FOTO PROFIL DI PENDAFTARAN -->
       <div class="avatar-upload-container">
         <div class="avatar-preview-circle" onclick="document.getElementById('regAvatarInput').click()" id="regAvatarPreview">
           📷
@@ -543,7 +541,6 @@
       <button class="btn btn-secondary" onclick="toggleEditProfileForm()" style="margin-top: 14px;">✏️ Edit Data Akademik</button>
     </div>
 
-    <!-- Form Edit Profil -->
     <div id="editProfileForm" class="card hidden" style="border: 1px solid var(--border);">
       <div class="section-title">
         <span>✏️ Edit Identitas Mahasiswa</span>
@@ -571,7 +568,6 @@
       <button class="btn btn-sm" onclick="saveProfileData()" style="width: 100%;">Simpan Profil</button>
     </div>
 
-    <!-- Pengaturan Akun & Data -->
     <div class="card">
       <div class="section-title">
         <span>⚙️ Pengaturan Aplikasi</span>
@@ -586,7 +582,6 @@
       <button class="btn btn-secondary" onclick="logout()" style="margin-top: 10px;">🚪 Logout Akun</button>
     </div>
 
-    <!-- Form Ubah Password -->
     <div id="changePasswordForm" class="card hidden" style="border: 1px solid var(--border);">
       <div class="section-title">
         <span>🔒 Ubah Kata Sandi</span>
@@ -645,6 +640,12 @@
     } else {
       switchAuth('login');
     }
+    // Interval update countdown real-time setiap 1 detik khusus di Home
+    setInterval(() => {
+      if (currentUser && !document.getElementById('dashboardView').classList.contains('hidden')) {
+        renderCourses();
+      }
+    }, 1000);
   };
 
   function toggleTheme() {
@@ -868,6 +869,11 @@
       return a.startTime.localeCompare(b.startTime);
     });
 
+    // Pengecekan Waktu Real-Time untuk Countdown 10 Menit Mau Masuk Kuliah
+    const now = new Date();
+    const currentDayName = ["Minggu", "Senin", "Selasa", "Rabu", "Kamis", "Jumat", "Sabtu"][now.getDay()];
+    const currentTotalSec = now.getHours() * 3600 + now.getMinutes() * 60 + now.getSeconds();
+
     let html = '';
     let currentDay = '';
 
@@ -905,12 +911,51 @@
         `;
       }
 
+      // Hitung durasi waktu kuliah dalam detik
+      const [startH, startM] = c.startTime.split(':').map(Number);
+      const [endH, endM] = c.endTime.split(':').map(Number);
+      const startTotalSec = startH * 3600 + startM * 60;
+      const endTotalSec = endH * 3600 + endM * 60;
+
+      let timeStatusHtml = '';
+      
+      if (c.day === currentDayName) {
+        const diffToStart = startTotalSec - currentTotalSec; // Selisih waktu sebelum kelas mulai (dalam detik)
+        
+        // Muncul hitung mundur KETIKA 10 MENIT MAU MASUK (antara 0 hingga 600 detik sebelum mulai)
+        if (diffToStart > 0 && diffToStart <= 600) {
+          const remMin = Math.floor(diffToStart / 60);
+          const remSec = diffToStart % 60;
+          const countdownStr = `${remMin}m ${remSec}s lagi`;
+
+          timeStatusHtml = `
+            <div class="home-countdown-box">
+              <div class="home-countdown-title">
+                <span>⚠️ SEGERA DIMULAI</span>
+                <span class="countdown-timer-badge">Masuk: ${countdownStr}</span>
+              </div>
+              <div class="home-countdown-desc">Kuliah <b>${c.name}</b> bakal dimulai sebentar lagi bree! Siap-siap yuk! 🏃‍♂️</div>
+            </div>
+          `;
+        } 
+        // Jika kelas SUDAH BERLANGSUNG (countdown/hitung mundur hilang otomatis sesuai request lu)
+        else if (currentTotalSec >= startTotalSec && currentTotalSec <= endTotalSec) {
+          timeStatusHtml = `
+            <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; padding: 10px; margin-top: 8px;">
+              <div style="font-size: 11px; font-weight: 800; color: var(--success); text-transform: uppercase;">🟢 KELAS SEDANG BERLANGSUNG</div>
+              <div style="font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 700;">Kuliah <b>${c.name}</b> lagi jalan nih bree! Jangan bolos ya! 🔥</div>
+            </div>
+          `;
+        }
+      }
+
       html += `
         <div class="item-card">
           <div style="flex: 1;">
             <div class="item-title">${c.name} (Kelas ${c.class})</div>
             <div class="item-sub">🕒 ${c.startTime} - ${c.endTime}</div>
             ${taskWidgetHtml}
+            ${timeStatusHtml}
           </div>
         </div>
       `;
@@ -1034,7 +1079,7 @@
             <div class="item-sub" style="color: var(--primary); font-weight: 700; margin-top: 4px;">👉 Klik buat kelola tugas matkul ini</div>
           </div>
           <div class="action-btns" onclick="event.stopPropagation()">
-            <button class="action-btn" onclick="editCourse(${c.id})">✏️️</button>
+            <button class="action-btn" onclick="editCourse(${c.id})">✏️</button>
             <button class="action-btn" onclick="deleteCourse(${c.id})">🗑</button>
           </div>
         </div>
