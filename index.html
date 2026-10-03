@@ -247,6 +247,8 @@
 <div class="container">
 
   <!-- AUTHENTICATION -->
+  <div id="rateLimitBanner" class="hidden" style="position:fixed;top:0;left:0;right:0;z-index:9999;background:var(--danger);color:#fff;padding:10px 14px;padding-top:calc(10px + env(safe-area-inset-top, 0px));font-size:13px;font-weight:600;text-align:center;"></div>
+
   <div id="loginView" class="card view-section">
     <div class="auth-header">
       <h2>Academic Planner 🎓</h2>
@@ -731,6 +733,59 @@
     return true;
   }
 
+  // ===== Rate limit + countdown =====
+  let rateTimer = null;
+  function renderRateBanner() {
+    const b = document.getElementById('rateLimitBanner');
+    let r = null;
+    try { r = JSON.parse(localStorage.getItem('rate_limit')); } catch (e) {}
+    const left = r ? Math.ceil((r.until - Date.now()) / 1000) : 0;
+    if (!r || left <= 0) {
+      localStorage.removeItem('rate_limit');
+      clearInterval(rateTimer);
+      b.classList.add('hidden');
+      return;
+    }
+    const mm = String(Math.floor(left / 60)).padStart(2, '0');
+    const ss = String(left % 60).padStart(2, '0');
+    b.innerText = `⏳ Kena limit ${r.what}. Coba lagi dalam ${mm}:${ss}` + '';
+    b.classList.remove('hidden');
+  }
+  function handleRateLimit(err, what) {
+    const msg = (err && err.message) || '';
+    const m = /after (\d+) seconds?/i.exec(msg);
+    if (m) {
+      // Supabase ngasih waktu pasti -> countdown akurat
+      const sec = parseInt(m[1], 10);
+      localStorage.setItem('rate_limit', JSON.stringify({ until: Date.now() + sec * 1000, exact: true, what }));
+      clearInterval(rateTimer);
+      renderRateBanner();
+      rateTimer = setInterval(renderRateBanner, 1000);
+      return true;
+    }
+    if ((err && err.status === 429) || /rate limit/i.test(msg)) {
+      // waktu reset nggak diketahui -> jangan kasih perkiraan, cukup info
+      const b = document.getElementById('rateLimitBanner');
+      b.innerText = `⏳ Kena limit ${what}. Waktu reset nggak diketahui, coba lagi beberapa saat lagi.`;
+      b.classList.remove('hidden');
+      clearInterval(rateTimer);
+      setTimeout(() => { if (!localStorage.getItem('rate_limit')) b.classList.add('hidden'); }, 8000);
+      return true;
+    }
+    return false;
+  }
+  function clearRateLimit() {
+    localStorage.removeItem('rate_limit');
+    renderRateBanner();
+  }
+  function initRateBanner() {
+    if (localStorage.getItem('rate_limit')) {
+      renderRateBanner();
+      rateTimer = setInterval(renderRateBanner, 1000);
+    }
+  }
+  // ===== END rate limit =====
+
   function showResetView() {
     ['loginView', 'registerView', 'dashboardView'].forEach(id => {
       const el = document.getElementById(id); if (el) el.classList.add('hidden');
@@ -758,8 +813,13 @@
     const { error } = await window.supabase.auth.resetPasswordForEmail(email, {
       redirectTo: location.origin + location.pathname
     });
-    if (error) { alert('Gagal kirim link reset: ' + error.message); return; }
-    alert('Kalau email itu terdaftar, link reset udah dikirim. Cek inbox (sama folder spam) ya bree 📩');
+    if (error) {
+      if (handleRateLimit(error, 'kirim email')) return;
+      alert('Gagal kirim link reset: ' + error.message);
+      return;
+    }
+    clearRateLimit();
+    alert('Permintaan diproses. Kalau email ini terdaftar, link reset dikirim (cek inbox & spam). Kalau 5 menit nggak ada email masuk, kemungkinan emailnya belum terdaftar atau akunnya udah dihapus, coba Daftar aja 📩');
   }
 
   async function submitNewPassword() {
@@ -802,6 +862,7 @@
 
   window.onload = async function() {
     applyTheme(currentTheme);
+    initRateBanner();
     await restoreSession();
     setInterval(() => {
       if (currentUser && !document.getElementById('dashboardView').classList.contains('hidden')) {
@@ -962,7 +1023,12 @@
       switchAuth('login');
       return;
     }
-    if (error) { alert('Gagal daftar: ' + error.message); return; }
+    if (error) {
+      if (handleRateLimit(error, 'pendaftaran')) return;
+      alert('Gagal daftar: ' + error.message);
+      return;
+    }
+    clearRateLimit();
     if (!data.session) {
       alert('Akun dibuat. Cek email buat konfirmasi dulu, baru login ya bree 📩');
       switchAuth('login');
@@ -977,7 +1043,12 @@
     const email = document.getElementById('loginEmail').value.trim().toLowerCase();
     const password = document.getElementById('loginPassword').value;
     const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
-    if (error) { alert('Login gagal: ' + error.message); return; }
+    if (error) {
+      if (handleRateLimit(error, 'login')) return;
+      alert('Login gagal: ' + error.message);
+      return;
+    }
+    clearRateLimit();
     await startSession(data.user);
   });
 
