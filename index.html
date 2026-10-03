@@ -288,6 +288,98 @@
     }
     [data-theme="light"] .nav-glass.lifted { box-shadow: 0 16px 34px rgba(79, 70, 229, 0.38), inset 2px 2px 4px #fff, inset -2px -2px 5px #fff, inset 0 -10px 16px rgba(99, 102, 241, 0.18); }
     [data-theme="light"] .nav-lens .nav-item { color: var(--primary-hover); }
+
+    /* ===== TEMA: LIQUID GLASS MATTE ===== */
+    :root {
+      --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 255 0 0 0 0 255 0 0 0 0 255 0 0 0 0.16 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url%28%23n%29'/%3E%3C/svg%3E");
+      --bg: #080c1a; --bg-gradient: none;
+      --card-bg-solid: rgba(255, 255, 255, 0.055);
+      --border: rgba(255, 255, 255, 0.11);
+      --input-bg: rgba(255, 255, 255, 0.05);
+      --item-hover: rgba(255, 255, 255, 0.08);
+      --semester-bg: linear-gradient(135deg, rgba(99, 102, 241, 0.30), rgba(139, 92, 246, 0.14));
+      --semester-border: rgba(165, 180, 252, 0.35);
+      --glass-hi: rgba(255, 255, 255, 0.16);
+      --glass-shadow: 0 10px 30px rgba(0, 0, 0, 0.32);
+      --sheen: linear-gradient(180deg, rgba(255, 255, 255, 0.24), rgba(255, 255, 255, 0) 60%);
+    }
+    [data-theme="light"] {
+      --grain: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.12 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url%28%23n%29'/%3E%3C/svg%3E");
+      --bg: #e9edfb; --bg-gradient: none;
+      --card-bg-solid: rgba(255, 255, 255, 0.55);
+      --border: rgba(255, 255, 255, 0.75);
+      --input-bg: rgba(255, 255, 255, 0.6);
+      --item-hover: rgba(255, 255, 255, 0.7);
+      --semester-bg: linear-gradient(135deg, rgba(99, 102, 241, 0.18), rgba(167, 139, 250, 0.12));
+      --semester-border: rgba(99, 102, 241, 0.25);
+      --glass-hi: rgba(255, 255, 255, 0.95);
+      --glass-shadow: 0 10px 30px rgba(51, 65, 130, 0.14);
+    }
+    body::after {
+      content: ''; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+      background:
+        radial-gradient(60% 45% at 12% 6%, rgba(99, 102, 241, 0.42), transparent 70%),
+        radial-gradient(55% 40% at 96% 30%, rgba(168, 85, 247, 0.28), transparent 70%),
+        radial-gradient(60% 45% at 18% 96%, rgba(34, 211, 238, 0.20), transparent 70%),
+        radial-gradient(50% 40% at 92% 100%, rgba(244, 114, 182, 0.20), transparent 70%);
+    }
+    [data-theme="light"] body::after {
+      background:
+        radial-gradient(60% 45% at 12% 6%, rgba(129, 140, 248, 0.45), transparent 70%),
+        radial-gradient(55% 40% at 96% 30%, rgba(244, 114, 182, 0.30), transparent 70%),
+        radial-gradient(60% 45% at 18% 96%, rgba(56, 189, 248, 0.32), transparent 70%),
+        radial-gradient(50% 40% at 92% 100%, rgba(251, 191, 36, 0.22), transparent 70%);
+    }
+    .card, .stat-card {
+      background-image: var(--grain); background-size: 160px;
+      -webkit-backdrop-filter: blur(22px) saturate(130%); backdrop-filter: blur(22px) saturate(130%);
+      box-shadow: var(--glass-shadow), inset 0 1px 0 var(--glass-hi);
+    }
+    .card { border-radius: 22px; }
+    .stat-card { border-radius: 16px; }
+    .theme-toggle-btn { -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: inset 0 1px 0 var(--glass-hi); }
+    .quote-card {
+      background-image: var(--grain), linear-gradient(135deg, rgba(99, 102, 241, 0.78), rgba(139, 92, 246, 0.55));
+      background-size: 160px, auto; border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 20px;
+      -webkit-backdrop-filter: blur(18px); backdrop-filter: blur(18px);
+      box-shadow: 0 12px 28px rgba(99, 102, 241, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+    .btn {
+      background-image: var(--sheen), var(--grain); background-size: auto, 160px;
+      background-color: rgba(99, 102, 241, 0.82); border: 1px solid rgba(255, 255, 255, 0.22); border-radius: 14px;
+      box-shadow: 0 8px 20px rgba(99, 102, 241, 0.30), inset 0 1px 0 rgba(255, 255, 255, 0.35);
+    }
+    .btn:hover { background-image: var(--sheen), var(--grain); background-color: rgba(79, 70, 229, 0.92); }
+    .btn-sm { border-radius: 10px; }
+    .btn-secondary, .btn-secondary:hover {
+      background-image: var(--grain), var(--semester-bg); background-size: 160px, auto;
+      background-color: var(--card-bg-solid); color: var(--text); border: 1px solid var(--border);
+      -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); box-shadow: inset 0 1px 0 var(--glass-hi);
+    }
+    .btn-secondary:hover { background-color: var(--item-hover); }
+    .btn-danger, .btn-danger:hover {
+      background-image: var(--sheen), var(--grain); background-size: auto, 160px;
+      background-color: rgba(239, 68, 68, 0.80); color: #fff; border: 1px solid rgba(255, 255, 255, 0.22);
+      box-shadow: 0 8px 20px rgba(239, 68, 68, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+    }
+    .btn-danger:hover { background-color: rgba(220, 38, 38, 0.9); }
+    .form-group input, .form-group select, .form-group textarea {
+      background-color: var(--input-bg); border: 1px solid var(--border); border-radius: 12px;
+      box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.16);
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      border-color: rgba(129, 140, 248, 0.75); box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.22), inset 0 1px 3px rgba(0, 0, 0, 0.12);
+    }
+    .semester-box { -webkit-backdrop-filter: blur(16px); backdrop-filter: blur(16px); box-shadow: inset 0 1px 0 var(--glass-hi); }
+    .day-tab.active { background-image: var(--sheen); }
+    .nav-bar { background-image: var(--grain); background-size: 160px; }
+    option { background: #1e293b; color: #f8fafc; }
+    [data-theme="light"] option { background: #fff; color: #0f172a; }
+    @supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+      :root { --card-bg-solid: rgba(30, 41, 59, 0.92); }
+      [data-theme="light"] { --card-bg-solid: rgba(255, 255, 255, 0.92); }
+    }
+    /* ===== END TEMA ===== */
   </style>
 </head>
 <body>
