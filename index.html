@@ -398,6 +398,16 @@
     }
     .cal-day.today { border: 1.5px solid rgba(129, 140, 248, 0.7); background-color: rgba(99, 102, 241, 0.14); }
     .action-btn { box-shadow: inset 0 1px 0 var(--glass-hi); }
+    /* bahasa */
+    #authLang { display: none; position: fixed; top: 16px; left: 16px; z-index: 50; }
+    #bottomNav.hidden ~ #authLang { display: block; }
+    .lang-select { background-color: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px; font-size: 12px; font-weight: 700; box-shadow: inset 0 1px 0 var(--glass-hi); }
+    #authLang .lang-select { width: auto; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
+    .bottom-nav { direction: ltr; }
+    #authLang .lang-select { max-width: 130px; }
+    body:has(#bottomNav.hidden) #loginView, body:has(#bottomNav.hidden) #registerView, body:has(#bottomNav.hidden) #resetView { margin-top: 58px; }
+    [dir="rtl"] .toggle-password { right: auto; left: 12px; }
+    [dir="rtl"] .password-wrapper input { padding-right: 12px; padding-left: 40px; }
     /* ===== END TEMA ===== */
   </style>
 </head>
@@ -474,7 +484,7 @@
       </div>
       <div class="form-group">
         <label>JURUSAN / PRODI</label>
-        <input type="text" id="regMajor" placeholder="Contoh: Pertanian/Agribisnis" required>
+        <input type="text" id="regMajor" placeholder="Contoh: Agribisnis" required>
       </div>
       <div class="form-group">
         <label>UNIVERSITAS / KAMPUS</label>
@@ -749,7 +759,7 @@
       </div>
       <div class="form-group">
         <label>JURUSAN / PRODI</label>
-        <input type="text" id="editMajorInput" placeholder="mis: Pertanian/Agribisnis">
+        <input type="text" id="editMajorInput" placeholder="mis: Agribisnis">
       </div>
       <div class="form-group">
         <label>UNIVERSITAS / KAMPUS</label>
@@ -762,6 +772,7 @@
       <div class="section-title">
         <span>⚙️ Pengaturan Aplikasi</span>
       </div>
+      <div class="form-group" style="margin-bottom: 10px;"><label>🌐 Language / Bahasa</label><select class="lang-select" onchange="setLanguage(this.value)"></select></div>
       <button class="btn btn-secondary" id="reminderBtn" onclick="toggleReminders()">🔔 Pengingat Deadline: Mati</button>
       <button class="btn btn-secondary" onclick="toggleChangePasswordForm()">🔒 Ubah Kata Sandi</button>
       <button class="btn btn-secondary" onclick="exportAppData()" style="margin-top: 10px;">💾 Backup / Export Data (JSON)</button>
@@ -825,6 +836,7 @@
   </div>
   <span class="nav-glass" id="navGlass"><span class="nav-lens" id="navLens"></span></span>
 </div>
+<div id="authLang"><select class="lang-select" onchange="setLanguage(this.value)" aria-label="Language"></select></div>
 
 <script>
 
@@ -1030,6 +1042,7 @@
     applyTheme(currentTheme);
     initRateBanner();
     initLiquidNav();
+    initI18n();
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js').catch(console.error);
     await restoreSession();
     updateReminderBtn();
@@ -1307,7 +1320,7 @@
       if (pendingTasksForCourse.length > 0) {
         const nearestTask = pendingTasksForCourse[0];
         const dateObj = new Date(nearestTask.deadline);
-        const formattedDate = dateObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        const formattedDate = dateObj.toLocaleDateString(window.getLocale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
         
         taskWidgetHtml = `
           <div class="home-task-box">
@@ -1669,7 +1682,7 @@
 
     taskContainer.innerHTML = filteredTasks.map(t => {
       const dateObj = new Date(t.deadline);
-      const formattedDate = dateObj.toLocaleDateString('id-ID', { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      const formattedDate = dateObj.toLocaleDateString(window.getLocale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
 
       let fileMarkup = '';
       if (t.attachment) {
@@ -1761,7 +1774,7 @@
     renderCalendar();
 
     const dateObj = new Date(dateStr);
-    const formattedDate = dateObj.toLocaleDateString('id-ID', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+    const formattedDate = dateObj.toLocaleDateString(window.getLocale(), { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
     document.getElementById('selectedDateTitle').innerText = `📅 Agenda: ${formattedDate}`;
 
     const activeSem = currentUser.activeSemester;
@@ -2103,6 +2116,224 @@
     window.syncLiquidNav = layout;
   })();
   // ===== END liquid nav =====
+
+  // ===== BAHASA (i18n): Indonesia, English, Melayu, 中文, العربية =====
+  (function () {
+    const LANGS = { id: 'Bahasa Indonesia', en: 'English', ms: 'Bahasa Melayu', zh: '中文', ar: 'العربية' };
+    const LOCALES = { id: 'id-ID', en: 'en-US', ms: 'ms-MY', zh: 'zh-CN', ar: 'ar-u-ca-gregory-nu-latn' };
+    const IDX = { en: 0, ms: 1, zh: 2, ar: 3 };
+    const RAW = `masuk buat atur jadwal & tugas kuliahmu|Sign in to manage your classes & assignments|Log masuk untuk urus jadual & tugasan kuliah anda|登录以管理你的课程表和作业|سجّل الدخول لإدارة جدولك الدراسي ومهامك
+email / username|Email / Username|E-mel / Nama pengguna|邮箱 / 用户名|البريد الإلكتروني / اسم المستخدم
+password|Password|Kata laluan|密码|كلمة المرور
+login|Login|Log masuk|登录|دخول
+lupa password|Forgot Password?|Lupa Kata Laluan?|忘记密码？|نسيت كلمة المرور؟
+belum punya akun|Don't have an account?|Belum ada akaun?|还没有账号？|ليس لديك حساب؟
+daftar|Sign Up|Daftar|注册|إنشاء حساب
+reset password|Reset Password|Tetap Semula Kata Laluan|重置密码|إعادة تعيين كلمة المرور
+masukin password baru buat akun lu|Enter a new password for your account|Masukkan kata laluan baharu untuk akaun anda|请为你的账号输入新密码|أدخل كلمة مرور جديدة لحسابك
+password baru|New Password|Kata Laluan Baharu|新密码|كلمة المرور الجديدة
+simpan password baru|Save New Password|Simpan Kata Laluan Baharu|保存新密码|حفظ كلمة المرور الجديدة
+buat akun baru|Create New Account|Cipta Akaun Baharu|创建新账号|إنشاء حساب جديد
+lengkapi data akademikmu|Complete your academic info|Lengkapkan maklumat akademik anda|完善你的学业信息|أكمل بياناتك الأكاديمية
+foto profil (opsional)|Profile Photo (Optional)|Gambar Profil (Pilihan)|头像（可选）|الصورة الشخصية (اختياري)
+nama lengkap|Full Name|Nama Penuh|姓名|الاسم الكامل
+nomor stambuk / nim|Student ID (NIM)|No. Matrik (NIM)|学号 (NIM)|الرقم الجامعي (NIM)
+jurusan / prodi|Major / Study Program|Jurusan / Program|专业|التخصص / البرنامج
+universitas / kampus|University / Campus|Universiti / Kampus|大学 / 校区|الجامعة / الحرم الجامعي
+email|Email|E-mel|邮箱|البريد الإلكتروني
+daftar akun|Register|Daftar Akaun|注册账号|تسجيل الحساب
+sudah punya akun|Already have an account?|Sudah ada akaun?|已有账号？|لديك حساب بالفعل؟
+selamat datang|Welcome|Selamat Datang|欢迎|مرحبًا
+siap untuk produktif hari ini|Ready to be productive today?|Bersedia untuk produktif hari ini?|今天准备好高效了吗？|هل أنت مستعد لإنجاز اليوم؟
+semester aktif|Active Semester|Semester Aktif|当前学期|الفصل الحالي
+pending|Pending|Belum Selesai|待完成|قيد الانتظار
+minggu ini|This Week|Minggu Ini|本周|هذا الأسبوع
+matkul|Courses|Kursus|课程|المقررات
+quote hari ini & reminder|Today's Quote & Reminder|Petikan Hari Ini & Peringatan|今日语录与提醒|اقتباس اليوم وتذكير
+ringkasan jadwal kuliah & tugas|Class & Assignment Summary|Ringkasan Jadual & Tugasan|课程与作业概览|ملخص الجدول والمهام
+jadwal perkuliahan|Class Schedule|Jadual Perkuliahan|课程表|الجدول الدراسي
++ tambah|+ Add|+ Tambah|+ 添加|+ إضافة
+nama mata kuliah|Course Name|Nama Mata Pelajaran|课程名称|اسم المقرر
+kelas|Class|Kelas|班级|الفصل
+hari|Day|Hari|星期|اليوم
+jam kuliah|Class Time|Waktu Kuliah|上课时间|وقت المحاضرة
+s/d|to|hingga|至|إلى
+simpan mata kuliah|Save Course|Simpan Mata Pelajaran|保存课程|حفظ المقرر
+semua|All|Semua|全部|الكل
+daftar tugas kuliah|Assignment List|Senarai Tugasan|作业列表|قائمة المهام
+mata kuliah|Course|Mata Pelajaran|课程|المقرر
+catatan / detail tugas|Notes / Assignment Details|Nota / Butiran Tugasan|备注 / 作业详情|ملاحظات / تفاصيل المهمة
+lampiran (foto / gambar / file / kamera)|Attachment (Photo / Image / File / Camera)|Lampiran (Foto / Imej / Fail / Kamera)|附件（照片 / 图片 / 文件 / 相机）|مرفق (صورة / ملف / كاميرا)
+deadline (tanggal & waktu)|Deadline (Date & Time)|Tarikh Akhir (Tarikh & Masa)|截止时间（日期和时间）|الموعد النهائي (التاريخ والوقت)
+simpan tugas|Save Assignment|Simpan Tugasan|保存作业|حفظ المهمة
+selesai|Done|Selesai|已完成|مكتمل
+kalender akademik|Academic Calendar|Kalendar Akademik|学术日历|التقويم الأكاديمي
+tugas & agenda tanggal ini|Assignments & Agenda for This Date|Tugasan & Agenda Tarikh Ini|当天的作业与安排|مهام وأجندة هذا التاريخ
+klik salah satu tanggal di kalender buat lihat detailnya bree|Tap a date on the calendar to see the details!|Klik satu tarikh di kalendar untuk lihat butirannya!|点击日历上的日期查看详情！|اضغط على تاريخ في التقويم لعرض التفاصيل!
+profil mahasiswa|Student Profile|Profil Pelajar|学生资料|الملف الشخصي للطالب
+nim|NIM|NIM|学号|الرقم الجامعي
+jurusan / program studi|Major / Study Program|Jurusan / Program Pengajian|专业 / 学习项目|التخصص / البرنامج الدراسي
+edit data akademik|Edit Academic Data|Sunting Data Akademik|编辑学业资料|تعديل البيانات الأكاديمية
+edit identitas mahasiswa|Edit Student Identity|Sunting Identiti Pelajar|编辑学生信息|تعديل هوية الطالب
+ubah foto profil|Change Profile Photo|Tukar Gambar Profil|更换头像|تغيير الصورة الشخصية
+simpan profil|Save Profile|Simpan Profil|保存资料|حفظ الملف الشخصي
+pengaturan aplikasi|App Settings|Tetapan Aplikasi|应用设置|إعدادات التطبيق
+pengingat deadline: mati|Deadline Reminder: Off|Peringatan Tarikh Akhir: Mati|截止提醒：关|تذكير المواعيد: متوقف
+pengingat deadline: nyala|Deadline Reminder: On|Peringatan Tarikh Akhir: Hidup|截止提醒：开|تذكير المواعيد: يعمل
+ubah kata sandi|Change Password|Tukar Kata Laluan|修改密码|تغيير كلمة المرور
+backup / export data (json)|Backup / Export Data (JSON)|Sandaran / Eksport Data (JSON)|备份 / 导出数据 (JSON)|نسخ احتياطي / تصدير البيانات (JSON)
+restore / import data|Restore / Import Data|Pulihkan / Import Data|恢复 / 导入数据|استعادة / استيراد البيانات
+reset semua data aplikasi|Reset All App Data|Set Semula Semua Data Aplikasi|重置所有应用数据|إعادة تعيين كل بيانات التطبيق
+logout akun|Log Out|Log Keluar|退出账号|تسجيل الخروج
+hapus akun permanen|Delete Account Permanently|Padam Akaun Selama-lamanya|永久删除账号|حذف الحساب نهائيًا
+password lama|Old Password|Kata Laluan Lama|旧密码|كلمة المرور القديمة
+update password|Update Password|Kemas Kini Kata Laluan|更新密码|تحديث كلمة المرور
+akun, profil, jadwal, dan semua tugas dihapus permanen dan nggak bisa dibalikin. download backup dulu kalau masih butuh datanya|Your account, profile, schedule and all assignments will be permanently deleted and cannot be restored. Download a backup first if you still need your data.|Akaun, profil, jadual dan semua tugasan akan dipadam selama-lamanya dan tidak boleh dipulihkan. Muat turun sandaran dahulu jika masih perlukan data.|账号、资料、课程表和所有作业将被永久删除且无法恢复。如仍需数据，请先下载备份。|سيتم حذف حسابك وملفك والجدول وجميع المهام نهائيًا ولا يمكن استرجاعها. نزّل نسخة احتياطية أولاً إن كنت تحتاج بياناتك.
+masukin password buat konfirmasi|Enter Password to Confirm|Masukkan Kata Laluan untuk Sahkan|输入密码以确认|أدخل كلمة المرور للتأكيد
+hapus akun saya selamanya|Delete My Account Forever|Padam Akaun Saya Selama-lamanya|永久删除我的账号|احذف حسابي نهائيًا
+home|Home|Utama|首页|الرئيسية
+jadwal|Schedule|Jadual|课表|الجدول
+tugas|Tasks|Tugasan|作业|المهام
+kalender|Calendar|Kalendar|日历|التقويم
+profil|Profile|Profil|我的|الملف
+ganti mode|Switch Theme|Tukar Mod|切换主题|تغيير المظهر
+minimal 6 karakter|At least 6 characters|Sekurang-kurangnya 6 aksara|至少6个字符|6 أحرف على الأقل
+senin|Monday|Isnin|星期一|الاثنين
+selasa|Tuesday|Selasa|星期二|الثلاثاء
+rabu|Wednesday|Rabu|星期三|الأربعاء
+kamis|Thursday|Khamis|星期四|الخميس
+jumat|Friday|Jumaat|星期五|الجمعة
+sabtu|Saturday|Sabtu|星期六|السبت
+minggu|Sunday|Ahad|星期日|الأحد
+min|Sun|Ahd|日|أحد
+sen|Mon|Isn|一|اثنين
+sel|Tue|Sel|二|ثلاثاء
+rab|Wed|Rab|三|أربعاء
+kam|Thu|Kha|四|خميس
+jum|Fri|Jum|五|جمعة
+sab|Sat|Sab|六|سبت
+januari|January|Januari|一月|يناير
+februari|February|Februari|二月|فبراير
+maret|March|Mac|三月|مارس
+april|April|April|四月|أبريل
+mei|May|Mei|五月|مايو
+juni|June|Jun|六月|يونيو
+juli|July|Julai|七月|يوليو
+agustus|August|Ogos|八月|أغسطس
+september|September|September|九月|سبتمبر
+oktober|October|Oktober|十月|أكتوبر
+november|November|November|十一月|نوفمبر
+desember|December|Disember|十二月|ديسمبر
+aman, gak ada tugas pending!|Safe, no pending assignments!|Selamat, tiada tugasan tertangguh!|很好，没有待办作业！|لا توجد مهام معلّقة!
+klik buat kelola tugas matkul ini|Tap to manage this course's assignments|Klik untuk urus tugasan kursus ini|点击管理本课程作业|اضغط لإدارة مهام هذا المقرر
+gak ada deadline tugas di tanggal ini bree. relaks!|No deadlines on this date. Relax!|Tiada tarikh akhir pada tarikh ini. Relaks!|这天没有截止作业，放松一下！|لا توجد مواعيد نهائية في هذا اليوم. استرخِ!
+segera dimulai|Starting Soon|Bakal Bermula|即将开始|تبدأ قريبًا
+kelas sedang berlangsung|Class in Progress|Kelas Sedang Berlangsung|正在上课|المحاضرة جارية
+password baru minimal 6 karakter!|New password must be at least 6 characters!|Kata laluan baharu sekurang-kurangnya 6 aksara!|新密码至少6个字符！|يجب ألا تقل كلمة المرور الجديدة عن 6 أحرف!
+password berhasil diganti!|Password changed successfully!|Kata laluan berjaya ditukar!|密码修改成功！|تم تغيير كلمة المرور بنجاح!
+data profil berhasil diperbarui!|Profile updated successfully!|Profil berjaya dikemas kini!|资料更新成功！|تم تحديث الملف الشخصي بنجاح!
+yakin mau hapus matkul ini, bree?|Are you sure you want to delete this course?|Pasti mahu padam kursus ini?|确定要删除这门课程吗？|هل أنت متأكد من حذف هذا المقرر؟
+yakin mau hapus tugas ini, bree?|Are you sure you want to delete this assignment?|Pasti mahu padam tugasan ini?|确定要删除这个作业吗？|هل أنت متأكد من حذف هذه المهمة؟
+nama mata kuliah dan jam wajib diisi, bree!|Course name and time are required!|Nama mata pelajaran dan masa wajib diisi!|课程名称和时间为必填！|اسم المقرر والوقت مطلوبان!
+`;
+    const coreOf = str => /^([^\p{L}\p{N}+]*)([\s\S]*?)([^\p{L}\p{N}]*)$/u.exec(str);
+    const norm = c => c.toLowerCase().replace(/\s+/g, ' ');
+    const DICT = {};
+    RAW.trim().split('\n').forEach(l => {
+      const p = l.split('|');
+      if (p.length === 5) DICT[norm(coreOf(p[0])[2])] = p.slice(1);
+    });
+    let lang = localStorage.getItem('app_lang');
+    if (!LANGS[lang]) lang = 'id';
+    const txtOrig = new WeakMap(), attrOrig = new WeakMap();
+    let observer = null;
+
+    function tr(src) {
+      if (lang === 'id' || !src) return src;
+      const m = coreOf(src);
+      if (!m || !m[2]) return src;
+      const core = m[2], i = IDX[lang];
+      let out = null;
+      const hit = DICT[norm(core)];
+      if (hit) out = hit[i];
+      else {
+        let r;
+        if ((r = /^semester (\d+)$/i.exec(core))) out = [`Semester ${r[1]}`, `Semester ${r[1]}`, `第${r[1]}学期`, `الفصل ${r[1]}`][i];
+        else if ((r = /^(\p{L}+) (\d{4})$/u.exec(core)) && DICT[norm(r[1])]) out = DICT[norm(r[1])][i] + ' ' + r[2];
+      }
+      if (out == null) return src;
+      if (/[A-Za-z]/.test(core) && core === core.toUpperCase()) out = out.toUpperCase();
+      const endsPunct = /[^\p{L}\p{N}]$/u.test(out);
+      return m[1] + out + (endsPunct ? /\s*$/.exec(m[3])[0] : m[3]);
+    }
+
+    function doText(n) {
+      if (!txtOrig.has(n)) { if (lang === 'id') return; txtOrig.set(n, n.nodeValue); }
+      const o = txtOrig.get(n), t = lang === 'id' ? o : tr(o);
+      if (n.nodeValue !== t) n.nodeValue = t;
+    }
+    function doAttr(el) {
+      for (const a of ['placeholder', 'title']) {
+        if (!el.hasAttribute(a)) continue;
+        let rec = attrOrig.get(el);
+        if (!rec) attrOrig.set(el, rec = {});
+        if (!(a in rec)) { if (lang === 'id') continue; rec[a] = el.getAttribute(a); }
+        const v = lang === 'id' ? rec[a] : tr(rec[a]);
+        if (el.getAttribute(a) !== v) el.setAttribute(a, v);
+      }
+    }
+    function walk(root) {
+      if (root.nodeType === 3) { doText(root); return; }
+      if (root.nodeType !== 1) return;
+      const w = document.createTreeWalker(root, NodeFilter.SHOW_TEXT, {
+        acceptNode: n => /^(SCRIPT|STYLE|TEXTAREA)$/.test(n.parentNode.nodeName) ? NodeFilter.FILTER_REJECT : NodeFilter.FILTER_ACCEPT
+      });
+      let n; while ((n = w.nextNode())) doText(n);
+      if (root.matches('[placeholder],[title]')) doAttr(root);
+      root.querySelectorAll('[placeholder],[title]').forEach(doAttr);
+    }
+    function observe() { observer.observe(document.body, { childList: true, subtree: true, characterData: true }); }
+    function onMutate(recs) {
+      observer.disconnect();
+      recs.forEach(r => {
+        if (r.type === 'characterData') { txtOrig.delete(r.target); doText(r.target); }
+        else r.addedNodes.forEach(walk);
+      });
+      observe();
+    }
+    function syncSelects() {
+      document.querySelectorAll('.lang-select').forEach(sel => {
+        if (!sel.options.length) Object.keys(LANGS).forEach(k => sel.add(new Option(LANGS[k], k)));
+        sel.value = lang;
+      });
+    }
+    window.getLocale = () => LOCALES[lang];
+    window.setLanguage = function (l) {
+      if (!LANGS[l]) return;
+      lang = l;
+      localStorage.setItem('app_lang', l);
+      document.documentElement.lang = l;
+      document.documentElement.dir = l === 'ar' ? 'rtl' : 'ltr';
+      observer.disconnect();
+      walk(document.body);
+      observe();
+      syncSelects();
+      const a = document.querySelector('#navBase .nav-item.active');
+      if (a && typeof currentUser !== 'undefined' && currentUser) switchTab(a.dataset.tab);
+    };
+    window.initI18n = function () {
+      const _alert = window.alert.bind(window), _confirm = window.confirm.bind(window);
+      window.alert = m => _alert(tr(String(m)));
+      window.confirm = m => _confirm(tr(String(m)));
+      observer = new MutationObserver(onMutate);
+      document.documentElement.lang = lang;
+      document.documentElement.dir = lang === 'ar' ? 'rtl' : 'ltr';
+      syncSelects();
+      walk(document.body);
+      observe();
+    };
+  })();
+  // ===== END BAHASA =====
 
   // ===== Pengingat deadline (jalan selama app kebuka) =====
   const REMIND_KEY = 'reminder_enabled';
