@@ -607,6 +607,7 @@
       </div>
       <button class="btn btn-danger" onclick="resetAppData()" style="margin-top: 14px;">🗑 Reset Semua Data Aplikasi</button>
       <button class="btn btn-secondary" onclick="logout()" style="margin-top: 10px;">🚪 Logout Akun</button>
+      <button class="btn btn-danger" onclick="toggleDeleteAccountForm()" style="margin-top: 10px;">⚠️ Hapus Akun Permanen</button>
     </div>
 
     <div id="changePasswordForm" class="card hidden" style="border: 1px solid var(--border);">
@@ -628,6 +629,21 @@
         </div>
       </div>
       <button class="btn btn-sm" onclick="saveNewPassword()" style="width: 100%;">Update Password</button>
+    </div>
+
+    <div id="deleteAccountForm" class="card hidden" style="border: 1px solid var(--danger);">
+      <div class="section-title">
+        <span>⚠️ Hapus Akun Permanen</span>
+      </div>
+      <p style="color: var(--muted); font-size: 12px; margin-bottom: 10px;">Akun, profil, jadwal, dan semua tugas dihapus permanen dan nggak bisa dibalikin. Download backup dulu kalau masih butuh datanya.</p>
+      <div class="form-group">
+        <label>MASUKIN PASSWORD BUAT KONFIRMASI</label>
+        <div class="password-wrapper">
+          <input type="password" id="deleteAccPassword" placeholder="••••••••">
+          <span class="toggle-password" onclick="togglePass('deleteAccPassword', this)">👁</span>
+        </div>
+      </div>
+      <button class="btn btn-danger" onclick="deleteAccount()" style="width: 100%; margin-top: 0;">Hapus Akun Saya Selamanya</button>
     </div>
   </div>
 
@@ -1705,6 +1721,36 @@
     });
 
     document.getElementById('statThisWeek').innerText = thisWeekTasks.length;
+  }
+
+  function toggleDeleteAccountForm() {
+    const pw = document.getElementById('deleteAccPassword');
+    pw.value = ''; pw.type = 'password';
+    document.querySelectorAll('#deleteAccountForm .toggle-password').forEach(el => el.innerText = '👁');
+    document.getElementById('deleteAccountForm').classList.toggle('hidden');
+  }
+
+  async function deleteAccount() {
+    const pw = document.getElementById('deleteAccPassword').value;
+    if (!pw) { alert('Masukin password dulu buat konfirmasi, bree.'); return; }
+
+    const chk = await window.supabase.auth.signInWithPassword({ email: currentUser.email, password: pw });
+    if (chk.error) { alert('Password salah, akun nggak jadi dihapus.'); return; }
+    if (!confirm('YAKIN? Akun dan semua jadwal & tugas bakal dihapus PERMANEN dan nggak bisa dibalikin.')) return;
+
+    clearTimeout(syncTimer);
+    const { error } = await window.supabase.rpc('delete_my_account');
+    if (error) { alert('Gagal hapus akun: ' + error.message); return; }
+
+    const email = currentUser.email;
+    try { await window.supabase.auth.signOut(); } catch (e) { /* sesi udah hangus di server, aman */ }
+    currentUser = null; coursesDB = []; tasksDB = [];
+    ['app_current_user', 'app_courses', 'app_tasks', 'pending_avatar_' + email].forEach(k => localStorage.removeItem(k));
+    ['dashboardView', 'scheduleView', 'taskView', 'calendarView', 'profileView', 'bottomNav']
+      .forEach(id => document.getElementById(id).classList.add('hidden'));
+    document.getElementById('deleteAccountForm').classList.add('hidden');
+    switchAuth('login');
+    alert('Akun lu udah dihapus permanen. Sampai jumpa, bree 👋');
   }
 
   async function logout() {
