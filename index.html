@@ -404,7 +404,7 @@
     .lang-select { background-color: var(--input-bg); color: var(--text); border: 1px solid var(--border); border-radius: 12px; padding: 8px 10px; font-size: 12px; font-weight: 700; box-shadow: inset 0 1px 0 var(--glass-hi); }
     #authLang .lang-select { width: auto; -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
     .bottom-nav { direction: ltr; }
-    #authLang .lang-select { max-width: 130px; }
+    #authLang .lang-select { width: auto; min-width: 158px; max-width: none; }
     body:has(#bottomNav.hidden) #loginView, body:has(#bottomNav.hidden) #registerView, body:has(#bottomNav.hidden) #resetView { margin-top: 58px; }
     [dir="rtl"] .toggle-password { right: auto; left: 12px; }
     [dir="rtl"] .password-wrapper input { padding-right: 12px; padding-left: 40px; }
@@ -2235,6 +2235,51 @@ data profil berhasil diperbarui!|Profile updated successfully!|Profil berjaya di
 yakin mau hapus matkul ini, bree?|Are you sure you want to delete this course?|Pasti mahu padam kursus ini?|确定要删除这门课程吗？|هل أنت متأكد من حذف هذا المقرر؟
 yakin mau hapus tugas ini, bree?|Are you sure you want to delete this assignment?|Pasti mahu padam tugasan ini?|确定要删除这个作业吗？|هل أنت متأكد من حذف هذه المهمة؟
 nama mata kuliah dan jam wajib diisi, bree!|Course name and time are required!|Nama mata pelajaran dan masa wajib diisi!|课程名称和时间为必填！|اسم المقرر والوقت مطلوبان!
+akun dibuat. cek email buat konfirmasi dulu, baru login ya bree|Account created. Check your email to confirm first, then log in.|Akaun dicipta. Semak e-mel untuk pengesahan dahulu, kemudian log masuk.|账号已创建。请先查收邮件确认，然后再登录。|تم إنشاء الحساب. تحقق من بريدك الإلكتروني للتأكيد أولاً ثم سجّل الدخول.
+akun lu udah dihapus permanen. sampai jumpa, bree|Your account has been permanently deleted. See you!|Akaun anda telah dipadam selama-lamanya. Jumpa lagi!|你的账号已被永久删除。再见！|تم حذف حسابك نهائيًا. إلى اللقاء!
+browser ini nggak support notifikasi. di iphone: install dulu ke layar utama (share → add to home screen), lalu buka dari ikonnya|This browser doesn't support notifications. On iPhone: install the app to your Home Screen first (Share → Add to Home Screen), then open it from the icon.|Pelayar ini tidak menyokong pemberitahuan. Pada iPhone: pasang dahulu ke skrin utama (Kongsi → Tambah ke Skrin Utama), kemudian buka dari ikon.|此浏览器不支持通知。在 iPhone 上请先安装到主屏幕（分享 → 添加到主屏幕），再从图标打开。|هذا المتصفح لا يدعم الإشعارات. على iPhone: ثبّت التطبيق أولاً على الشاشة الرئيسية (مشاركة ← إضافة إلى الشاشة الرئيسية) ثم افتحه من الأيقونة.
+data berhasil di-restore dan disinkron ke cloud|Data restored and synced to the cloud!|Data berjaya dipulihkan dan disegerakkan ke awan!|数据已恢复并同步到云端！|تمت استعادة البيانات ومزامنتها مع السحابة!
+email ini sudah terdaftar, bree. silakan login (atau pakai lupa password kalau lupa)|This email is already registered. Please log in (or use Forgot Password if you forgot it).|E-mel ini sudah didaftarkan. Sila log masuk (atau guna Lupa Kata Laluan jika terlupa).|该邮箱已注册。请直接登录（忘记密码可使用“忘记密码”）。|هذا البريد مسجّل مسبقًا. سجّل الدخول (أو استخدم «نسيت كلمة المرور» إن نسيتها).
+foto nggak bisa dibaca, coba foto lain ya bree|The photo can't be read, please try another one.|Foto tidak dapat dibaca, cuba foto lain.|无法读取这张照片，请换一张试试。|تعذّرت قراءة الصورة، جرّب صورة أخرى.
+gagal membaca file json, pastikan file-nya bener|Failed to read the JSON file, make sure the file is valid!|Gagal membaca fail JSON, pastikan fail betul!|无法读取 JSON 文件，请确认文件正确！|فشلت قراءة ملف JSON، تأكد من صحة الملف!
+isi dulu email lu di kolom email, baru klik lupa password|Enter your email in the email field first, then tap Forgot Password.|Isi e-mel anda dahulu dalam ruang e-mel, kemudian klik Lupa Kata Laluan.|请先在邮箱栏填写邮箱，再点“忘记密码”。|اكتب بريدك الإلكتروني في الحقل أولاً ثم اضغط «نسيت كلمة المرور».
+izin notifikasi nggak diberikan|Notification permission was not granted.|Kebenaran pemberitahuan tidak diberikan.|未授予通知权限。|لم يتم منح إذن الإشعارات.
+link reset sudah kedaluwarsa atau dipakai. minta link baru lewat lupa password ya bree|The reset link has expired or was already used. Request a new one via Forgot Password.|Pautan tetapan semula telah tamat tempoh atau sudah digunakan. Minta pautan baharu melalui Lupa Kata Laluan.|重置链接已过期或已被使用，请通过“忘记密码”重新获取。|انتهت صلاحية رابط إعادة التعيين أو تم استخدامه. اطلب رابطًا جديدًا عبر «نسيت كلمة المرور».
+mantap bree! file backup data berhasil di-download|Backup file downloaded successfully! 💾|Fail sandaran berjaya dimuat turun! 💾|备份文件下载成功！💾|تم تنزيل ملف النسخة الاحتياطية بنجاح! 💾
+masukin password dulu buat konfirmasi, bree|Enter your password first to confirm.|Masukkan kata laluan dahulu untuk mengesahkan.|请先输入密码以确认。|أدخل كلمة المرور أولاً للتأكيد.
+mohon isi mata kuliah, detail tugas, dan deadline, bree|Please fill in the course, assignment details, and deadline!|Sila isi kursus, butiran tugasan dan tarikh akhir!|请填写课程、作业详情和截止时间！|يرجى إدخال المقرر وتفاصيل المهمة والموعد النهائي!
+nama tidak boleh kosong, bree|Name cannot be empty!|Nama tidak boleh kosong!|姓名不能为空！|لا يمكن ترك الاسم فارغًا!
+notifikasi lagi diblokir di pengaturan browser/hp. izinkan dulu di pengaturan situs, lalu coba lagi|Notifications are blocked in your browser/phone settings. Allow them in site settings, then try again.|Pemberitahuan disekat dalam tetapan pelayar/telefon. Benarkan dalam tetapan tapak, kemudian cuba lagi.|通知在浏览器/手机设置中被屏蔽。请在网站设置中允许后再试。|الإشعارات محظورة في إعدادات المتصفح/الهاتف. اسمح بها من إعدادات الموقع ثم حاول مجددًا.
+peringatan: semua jadwal dan tugas kamu bakal dihapus permanen! yakin mau reset, bree|WARNING: All your schedules and assignments will be permanently deleted! Are you sure you want to reset?|AMARAN: Semua jadual dan tugasan anda akan dipadam selama-lamanya! Pasti mahu set semula?|警告：你所有的课程表和作业将被永久删除！确定要重置吗？|تحذير: سيتم حذف كل جداولك ومهامك نهائيًا! هل تريد إعادة التعيين فعلًا؟
+password berhasil diperbarui!|Password updated successfully!|Kata laluan berjaya dikemas kini!|密码更新成功！|تم تحديث كلمة المرور بنجاح!
+password lama kamu salah, bree|Your old password is wrong!|Kata laluan lama anda salah!|旧密码不正确！|كلمة المرور القديمة غير صحيحة!
+password salah, akun nggak jadi dihapus|Wrong password, the account was not deleted.|Kata laluan salah, akaun tidak jadi dipadam.|密码错误，账号未被删除。|كلمة المرور خاطئة، لم يتم حذف الحساب.
+pengingat nyala 🔔 muncul pas tugas tinggal <24 jam dan <1 jam. catatan: baru jalan selama aplikasi kebuka atau masih aktif di latar belakang|Reminders are on 🔔 You'll be notified when an assignment has <24 hours and <1 hour left. Note: this only works while the app is open or still active in the background.|Peringatan dihidupkan 🔔 Anda akan dimaklumkan apabila tugasan tinggal <24 jam dan <1 jam. Nota: hanya berfungsi semasa aplikasi dibuka atau masih aktif di latar belakang.|提醒已开启 🔔 作业剩余不足24小时和不足1小时时会通知你。注意：仅在应用打开或仍在后台运行时有效。|تم تشغيل التذكير 🔔 ستصلك إشعارات عندما يتبقى أقل من 24 ساعة وأقل من ساعة على المهمة. ملاحظة: يعمل فقط أثناء فتح التطبيق أو بقائه نشطًا في الخلفية.
+permintaan diproses. kalau email ini terdaftar, link reset dikirim (cek inbox & spam). kalau 5 menit nggak ada email masuk, kemungkinan emailnya belum terdaftar atau akunnya udah dihapus, coba daftar aja|Request processed. If this email is registered, a reset link was sent (check inbox & spam). If nothing arrives in 5 minutes, the email may not be registered or the account was deleted, so try signing up. 📩|Permintaan diproses. Jika e-mel ini berdaftar, pautan tetapan semula dihantar (semak peti masuk & spam). Jika tiada e-mel dalam 5 minit, mungkin e-mel belum berdaftar atau akaun sudah dipadam, cuba daftar. 📩|请求已处理。如果该邮箱已注册，重置链接已发送（请查看收件箱和垃圾邮件）。5分钟内没收到邮件，可能是邮箱未注册或账号已删除，请尝试注册。📩|تمت معالجة الطلب. إذا كان البريد مسجلاً فقد أُرسل رابط إعادة التعيين (تحقق من الوارد والرسائل غير المرغوبة). إن لم يصلك شيء خلال 5 دقائق فربما البريد غير مسجل أو الحساب محذوف، جرّب التسجيل. 📩
+semua data berhasil direset dari nol|All data has been reset from scratch!|Semua data berjaya ditetapkan semula dari awal!|所有数据已从零重置！|تمت إعادة تعيين كل البيانات من الصفر!
+yakin? akun dan semua jadwal & tugas bakal dihapus permanen dan nggak bisa dibalikin|ARE YOU SURE? The account and all schedules & assignments will be permanently deleted and cannot be restored.|PASTI? Akaun dan semua jadual & tugasan akan dipadam selama-lamanya dan tidak boleh dipulihkan.|确定吗？账号以及所有课程表和作业将被永久删除，无法恢复。|هل أنت متأكد؟ سيتم حذف الحساب وكل الجداول والمهام نهائيًا ولا يمكن استرجاعها.
+update mata kuliah|Update Course|Kemas Kini Mata Pelajaran|更新课程|تحديث المقرر
+update tugas|Update Assignment|Kemas Kini Tugasan|更新作业|تحديث المهمة
+deadline kurang dari 1 jam|Deadline in less than 1 hour!|Tarikh akhir kurang 1 jam lagi!|距离截止不足1小时！|الموعد النهائي بعد أقل من ساعة!
+deadline kurang dari 24 jam|Deadline in less than 24 hours|Tarikh akhir kurang 24 jam lagi|距离截止不足24小时|الموعد النهائي بعد أقل من 24 ساعة
+kuliah|Class|Kuliah|课程|محاضرة
+lagi jalan nih bree! jangan bolos ya|is in progress! Don't skip it! 🔥|sedang berlangsung! Jangan ponteng! 🔥|正在进行中！别逃课哦！🔥|جارية الآن! لا تتغيب! 🔥
+bakal dimulai sebentar lagi bree! siap-siap yuk|starts in a moment! Get ready! 🏃‍♂️|bakal bermula sebentar lagi! Bersiap sedia! 🏃‍♂️|马上就要开始了！快准备吧！🏃‍♂️|ستبدأ بعد قليل! استعد! 🏃‍♂️
+tambah matkul dulu di jadwal|Add a Course in Schedule First|Tambah Kursus Dahulu di Jadual|请先在课表添加课程|أضف مقررًا في الجدول أولاً
+kirim email|sending emails|menghantar e-mel|发送邮件|إرسال البريد
+pendaftaran|registration|pendaftaran|注册|التسجيل
+detail tugas atau instruksi dosen|Assignment details or lecturer's instructions|Butiran tugasan atau arahan pensyarah|作业详情或老师的要求|تفاصيل المهمة أو تعليمات المحاضر
+gagal sync ke cloud|Failed to sync to cloud|Gagal segerak ke awan|同步到云端失败|فشلت المزامنة مع السحابة
+gagal ambil data cloud|Failed to load cloud data|Gagal mengambil data awan|获取云端数据失败|فشل تحميل بيانات السحابة
+gagal daftar|Sign up failed|Gagal mendaftar|注册失败|فشل إنشاء الحساب
+login gagal|Login failed|Log masuk gagal|登录失败|فشل تسجيل الدخول
+gagal ganti password|Failed to change password|Gagal menukar kata laluan|修改密码失败|فشل تغيير كلمة المرور
+gagal hapus akun|Failed to delete account|Gagal memadam akaun|删除账号失败|فشل حذف الحساب
+gagal kirim link reset|Failed to send reset link|Gagal menghantar pautan tetapan semula|发送重置链接失败|فشل إرسال رابط إعادة التعيين
+jangan tunggu mood datang, nugas dulu baru mood ikut sendiri|Don't wait for the mood, do the work first and the mood will follow|Jangan tunggu mood datang, buat tugasan dahulu dan mood akan ikut sendiri|别等心情来，先做作业，心情自然会跟上|لا تنتظر المزاج، أنجز المهمة أولاً وسيتبعك المزاج
+pendidikan bukan cuma soal nilai, tapi proses lu ngebentuk karakter disiplin|Education isn't just about grades, it's the process of building disciplined character|Pendidikan bukan sekadar soal gred, tetapi proses membentuk watak berdisiplin|教育不只是分数，更是塑造自律品格的过程|التعليم ليس مجرد درجات، بل هو عملية بناء شخصية منضبطة
+satu tugas selesai hari ini = satu tidur nyenyak nanti malam|One assignment done today = one good night's sleep tonight|Satu tugasan siap hari ini = satu tidur nyenyak malam nanti|今天完成一项作业 = 今晚睡个好觉|مهمة واحدة منجزة اليوم = نوم هانئ الليلة
+tetap konsisten bree, tugas dicicil dari sekarang biar kagak numpuk pas deadline|Stay consistent, do your assignments bit by bit from now so they don't pile up at the deadline|Kekal konsisten, siapkan tugasan sedikit demi sedikit dari sekarang supaya tidak bertimbun pada tarikh akhir|保持节奏，从现在起一点点完成作业，别等到截止前堆成山|حافظ على الاستمرارية وأنجز مهامك تدريجيًا من الآن حتى لا تتراكم عند الموعد النهائي
 `;
     const coreOf = str => /^([^\p{L}\p{N}+]*)([\s\S]*?)([^\p{L}\p{N}]*)$/u.exec(str);
     const norm = c => c.toLowerCase().replace(/\s+/g, ' ');
@@ -2248,6 +2293,30 @@ nama mata kuliah dan jam wajib diisi, bree!|Course name and time are required!|N
     const txtOrig = new WeakMap(), attrOrig = new WeakMap();
     let observer = null;
 
+    const EG = ['e.g.', 'cth.', '例如：', 'مثال:'];
+    const tw = (x, i) => { const h = DICT[norm(x)]; return h ? h[i] : x; };
+    function patterns(core, i) {
+      let r;
+      if ((r = /^selamat datang, (.+)$/i.exec(core))) return [`Welcome, ${r[1]}`, `Selamat datang, ${r[1]}`, `欢迎，${r[1]}`, `مرحبًا، ${r[1]}`][i];
+      if ((r = /^(.+) \(kelas ([^)]+)\)?$/i.exec(core))) return [`${r[1]} (Class ${r[2]})`, `${r[1]} (Kelas ${r[2]})`, `${r[1]}（${r[2]}班）`, `${r[1]} (الفصل ${r[2]})`][i];
+      if ((r = /^deadline terdekat \((\d+) tugas pending\)?$/i.exec(core))) return [`Nearest Deadline (${r[1]} Pending):`, `Tarikh Akhir Terdekat (${r[1]} Tertangguh):`, `最近截止（${r[1]} 项待办）：`, `أقرب موعد (${r[1]} قيد الانتظار):`][i];
+      if ((r = /^batas: (.+)$/i.exec(core))) return [`Due: ${r[1]}`, `Had: ${r[1]}`, `截止：${r[1]}`, `الموعد: ${r[1]}`][i];
+      if ((r = /^hari (\p{L}+)$/iu.exec(core)) && DICT[norm(r[1])]) { const d = DICT[norm(r[1])]; return [d[0], `Hari ${d[1]}`, d[2], d[3]][i]; }
+      if ((r = /^kelas: (.+?) \| (.+)$/i.exec(core))) return [`Class: ${r[1]} | ${r[2]}`, `Kelas: ${r[1]} | ${r[2]}`, `班级：${r[1]} | ${r[2]}`, `الفصل: ${r[1]} | ${r[2]}`][i];
+      if ((r = /^jam (\d.*)$/i.exec(core))) return [`Time ${r[1]}`, `Jam ${r[1]}`, `时间 ${r[1]}`, `الساعة ${r[1]}`][i];
+      if ((r = /^agenda: (.+)$/i.exec(core))) return [`Agenda: ${r[1]}`, `Agenda: ${r[1]}`, `日程：${r[1]}`, `الأجندة: ${r[1]}`][i];
+      if ((r = /^(?:contoh|mis): (.+)$/i.exec(core))) return `${EG[i]} ${r[1]}`;
+      if ((r = /^(.+?) \(mis: (.+?)\)?$/i.exec(core))) return `${tw(r[1], i)} (${EG[i]} ${r[2]})`;
+      if ((r = /^kena limit (.+?)\. coba lagi dalam (.+)$/i.exec(core))) { const w = tw(r[1], i); return [`${w} limit reached. Try again in ${r[2]}`, `Had ${w} dicapai. Cuba lagi dalam ${r[2]}`, `${w}已达上限，请 ${r[2]} 后重试`, `تم بلوغ حد ${w}. حاول بعد ${r[2]}`][i]; }
+      if ((r = /^kena limit (.+?)\. waktu reset nggak diketahui, coba lagi beberapa saat lagi$/i.exec(core))) { const w = tw(r[1], i); return [`${w} limit reached. Reset time unknown, try again in a little while.`, `Had ${w} dicapai. Masa set semula tidak diketahui, cuba lagi sebentar lagi.`, `${w}已达上限，重置时间未知，请稍后再试。`, `تم بلوغ حد ${w}. وقت إعادة التعيين غير معروف، حاول بعد قليل.`][i]; }
+      if ((r = /^menampilkan tugas matkul: (.+?) \(klik tab "semua" buat reset\)?$/i.exec(core))) return [`Showing course assignments: ${r[1]} (tap the "All" tab to reset)`, `Memaparkan tugasan kursus: ${r[1]} (klik tab "Semua" untuk set semula)`, `显示课程作业：${r[1]}（点击“全部”标签重置）`, `عرض مهام المقرر: ${r[1]} (اضغط تبويب «الكل» لإعادة التعيين)`][i];
+      if ((r = /^(\d+m \d+s) lagi$/i.exec(core))) return [`${r[1]} left`, `${r[1]} lagi`, `还剩 ${r[1]}`, `باقي ${r[1]}`][i];
+      if ((r = /^belum ada mata kuliah di semester (\d+)\. tambahkan dulu di tab jadwal$/i.exec(core))) return [`No courses in Semester ${r[1]} yet. Add one in the Schedule tab!`, `Belum ada kursus dalam Semester ${r[1]}. Tambah dahulu di tab Jadual!`, `第${r[1]}学期还没有课程，请先在“课表”标签添加！`, `لا توجد مقررات في الفصل ${r[1]} بعد. أضف واحدًا من تبويب الجدول!`][i];
+      if ((r = /^tidak ada tugas di semester (\d+)\. aman bree$/i.exec(core))) return [`No assignments in Semester ${r[1]}. You're safe!`, `Tiada tugasan dalam Semester ${r[1]}. Selamat!`, `第${r[1]}学期没有作业，很安全！`, `لا توجد مهام في الفصل ${r[1]}. أنت بأمان!`][i];
+      if ((r = /^((?:gagal [^:]+)|login gagal): ([\s\S]*)$/i.exec(core))) return `${tw(r[1], i)}: ${r[2]}`;
+      return null;
+    }
+
     function tr(src) {
       if (lang === 'id' || !src) return src;
       const m = coreOf(src);
@@ -2260,6 +2329,7 @@ nama mata kuliah dan jam wajib diisi, bree!|Course name and time are required!|N
         let r;
         if ((r = /^semester (\d+)$/i.exec(core))) out = [`Semester ${r[1]}`, `Semester ${r[1]}`, `第${r[1]}学期`, `الفصل ${r[1]}`][i];
         else if ((r = /^(\p{L}+) (\d{4})$/u.exec(core)) && DICT[norm(r[1])]) out = DICT[norm(r[1])][i] + ' ' + r[2];
+        else out = patterns(core, i);
       }
       if (out == null) return src;
       if (/[A-Za-z]/.test(core) && core === core.toUpperCase()) out = out.toUpperCase();
@@ -2308,6 +2378,7 @@ nama mata kuliah dan jam wajib diisi, bree!|Course name and time are required!|N
       });
     }
     window.getLocale = () => LOCALES[lang];
+    window.t18 = tr;
     window.setLanguage = function (l) {
       if (!LANGS[l]) return;
       lang = l;
@@ -2362,6 +2433,7 @@ nama mata kuliah dan jam wajib diisi, bree!|Course name and time are required!|N
     alert('Pengingat nyala 🔔 Muncul pas tugas tinggal <24 jam dan <1 jam. Catatan: baru jalan selama aplikasi kebuka atau masih aktif di latar belakang.');
   }
   async function showLocalNotification(title, body, tag) {
+    title = window.t18 ? window.t18(title) : title;
     const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
     if (reg) return reg.showNotification(title, { body, tag, icon: 'icon-192.png', badge: 'icon-192.png', data: { url: './' } });
     new Notification(title, { body, tag, icon: 'icon-192.png' });
