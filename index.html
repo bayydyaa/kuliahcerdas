@@ -622,10 +622,88 @@
 </div>
 
 <script>
-  let usersDB = JSON.parse(localStorage.getItem('app_users')) || [];
-  let currentUser = JSON.parse(localStorage.getItem('app_current_user')) || null;
-  let coursesDB = JSON.parse(localStorage.getItem('app_courses')) || [];
-  let tasksDB = JSON.parse(localStorage.getItem('app_tasks')) || [];
+
+  // ===== CLOUD (Supabase) =====
+  const _origSetItem = Storage.prototype.setItem;
+  const SYNC_KEYS = ['app_courses', 'app_tasks', 'app_current_user'];
+  let hydrating = false, syncTimer = null;
+  Storage.prototype.setItem = function(k, v) {
+    _origSetItem.call(this, k, v);
+    if (this === localStorage && !hydrating && currentUser && SYNC_KEYS.includes(k)) {
+      clearTimeout(syncTimer);
+      syncTimer = setTimeout(cloudSave, 600);
+    }
+  };
+
+  async function cloudSave() {
+    if (!currentUser) return;
+    const { id, email, ...profile } = currentUser;
+    const payload = {
+      profile,
+      courses: coursesDB.filter(c => c.userId === id),
+      tasks: tasksDB.filter(t => t.userId === id)
+    };
+    const { error } = await window.supabase.from('app_data')
+      .upsert({ user_id: id, data: payload, updated_at: new Date().toISOString() });
+    if (error) { console.error(error); alert('Gagal sync ke cloud: ' + error.message); }
+  }
+
+  async function startSession(u, seedProfile) {
+    const { data, error } = await window.supabase.from('app_data')
+      .select('data').eq('user_id', u.id).maybeSingle();
+    if (error) { alert('Gagal ambil data cloud: ' + error.message); return false; }
+
+    hydrating = true;
+    let d = data && data.data;
+    const firstTime = !d;
+    if (firstTime) {
+      // migrasi data lama dari localStorage perangkat ini (kalau email-nya sama)
+      const olds = JSON.parse(localStorage.getItem('app_users') || '[]');
+      const old = olds.find(x => x.email === u.email);
+      const oc = JSON.parse(localStorage.getItem('app_courses') || '[]');
+      const ot = JSON.parse(localStorage.getItem('app_tasks') || '[]');
+      let oldProfile = {};
+      if (old) { const { password, id, ...rest } = old; oldProfile = rest; }
+      d = {
+        profile: Object.assign({ activeSemester: 1 }, oldProfile, seedProfile || {}),
+        courses: old ? oc.filter(c => c.userId === old.id) : [],
+        tasks: old ? ot.filter(t => t.userId === old.id) : []
+      };
+      if (old) localStorage.removeItem('app_users'); // buang password plaintext lama
+    }
+    // isi profil kosong dari data pendaftaran (user_metadata) + foto yang nunggu
+    const meta = u.user_metadata || {};
+    let healed = false;
+    d.profile = d.profile || {};
+    ['name', 'nim', 'major', 'campus'].forEach(k => {
+      if (!d.profile[k] && meta[k]) { d.profile[k] = meta[k]; healed = true; }
+    });
+    const pk = 'pending_avatar_' + u.email;
+    const pendingAvatar = localStorage.getItem(pk);
+    if (!d.profile.avatar && pendingAvatar) { d.profile.avatar = pendingAvatar; healed = true; }
+    currentUser = Object.assign({ id: u.id, email: u.email, activeSemester: 1 }, d.profile);
+    coursesDB = (d.courses || []).map(c => ({ ...c, userId: u.id }));
+    tasksDB = (d.tasks || []).map(t => ({ ...t, userId: u.id }));
+    _origSetItem.call(localStorage, 'app_current_user', JSON.stringify(currentUser));
+    _origSetItem.call(localStorage, 'app_courses', JSON.stringify(coursesDB));
+    _origSetItem.call(localStorage, 'app_tasks', JSON.stringify(tasksDB));
+    hydrating = false;
+    if (firstTime || healed) { await cloudSave(); localStorage.removeItem(pk); }
+    showDashboard();
+    return true;
+  }
+
+  async function restoreSession() {
+    const { data } = await window.supabase.auth.getSession();
+    if (data.session && await startSession(data.session.user)) return;
+    switchAuth('login');
+  }
+  // ===== END CLOUD =====
+
+  let usersDB = [];
+  let currentUser = null;
+  let coursesDB = [];
+  let tasksDB = [];
   let currentTheme = localStorage.getItem('app_theme') || 'dark';
 
   let tempRegAvatarBase64 = null;
@@ -645,13 +723,9 @@
     '"Jangan tunggu mood datang, nugas dulu baru mood ikut sendiri!" 🔥'
   ];
 
-  window.onload = function() {
+  window.onload = async function() {
     applyTheme(currentTheme);
-    if (currentUser) {
-      showDashboard();
-    } else {
-      switchAuth('login');
-    }
+    await restoreSession();
     setInterval(() => {
       if (currentUser && !document.getElementById('dashboardView').classList.contains('hidden')) {
         renderCourses();
@@ -773,55 +847,35 @@
     switchTab('task');
   }
 
-  document.getElementById('registerForm').addEventListener('submit', function(e) {
+  document.getElementById('registerForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const name = document.getElementById('regName').value;
-    const nim = document.getElementById('regNim').value;
-    const major = document.getElementById('regMajor').value;
-    const campus = document.getElementById('regCampus').value;
-    const email = document.getElementById('regEmail').value;
+    const g = id => document.getElementById(id).value.trim();
+    const email = g('regEmail').toLowerCase();
     const password = document.getElementById('regPassword').value;
+    const seed = { name: g('regName'), nim: g('regNim'), major: g('regMajor'), campus: g('regCampus'), avatar: tempRegAvatarBase64 || null };
 
-    if (usersDB.some(u => u.email === email)) {
-      alert('Email sudah terdaftar!');
+    if (seed.avatar) { try { localStorage.setItem('pending_avatar_' + email, seed.avatar); } catch (e) {} }
+    const { data, error } = await window.supabase.auth.signUp({
+      email, password,
+      options: { data: { name: seed.name, nim: seed.nim, major: seed.major, campus: seed.campus } }
+    });
+    if (error) { alert('Gagal daftar: ' + error.message); return; }
+    if (!data.session) {
+      alert('Akun dibuat. Cek email buat konfirmasi dulu, baru login ya bree 📩');
+      switchAuth('login');
       return;
     }
-
-    const newUser = { 
-      id: Date.now(), 
-      name, 
-      email, 
-      activeSemester: 1, 
-      password,
-      nim,
-      major,
-      campus,
-      avatar: tempRegAvatarBase64 || null
-    };
-    usersDB.push(newUser);
-    localStorage.setItem('app_users', JSON.stringify(usersDB));
-    
-    currentUser = newUser;
-    localStorage.setItem('app_current_user', JSON.stringify(currentUser));
-    
     tempRegAvatarBase64 = null;
-    showDashboard();
+    await startSession(data.user, seed);
   });
 
-  document.getElementById('loginForm').addEventListener('submit', function(e) {
+  document.getElementById('loginForm').addEventListener('submit', async function(e) {
     e.preventDefault();
-    const email = document.getElementById('loginEmail').value;
+    const email = document.getElementById('loginEmail').value.trim().toLowerCase();
     const password = document.getElementById('loginPassword').value;
-
-    const user = usersDB.find(u => u.email === email && u.password === password);
-    if (!user) {
-      alert('Email atau password salah!');
-      return;
-    }
-
-    currentUser = user;
-    localStorage.setItem('app_current_user', JSON.stringify(currentUser));
-    showDashboard();
+    const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
+    if (error) { alert('Login gagal: ' + error.message); return; }
+    await startSession(data.user);
   });
 
   function showDashboard() {
@@ -1459,11 +1513,12 @@
     document.getElementById('changePasswordForm').classList.toggle('hidden');
   }
 
-  function saveNewPassword() {
+  async function saveNewPassword() {
     const oldPass = document.getElementById('oldPasswordInput').value;
     const newPass = document.getElementById('newPasswordInput').value;
 
-    if (oldPass !== currentUser.password) {
+    const chk = await window.supabase.auth.signInWithPassword({ email: currentUser.email, password: oldPass });
+    if (chk.error) {
       alert('Password lama kamu salah, bree!');
       return;
     }
@@ -1473,14 +1528,8 @@
       return;
     }
 
-    currentUser.password = newPass;
-    localStorage.setItem('app_current_user', JSON.stringify(currentUser));
-
-    const idx = usersDB.findIndex(u => u.id === currentUser.id);
-    if (idx !== -1) {
-      usersDB[idx].password = newPass;
-      localStorage.setItem('app_users', JSON.stringify(usersDB));
-    }
+    const up = await window.supabase.auth.updateUser({ password: newPass });
+    if (up.error) { alert('Gagal ganti password: ' + up.error.message); return; }
 
     toggleChangePasswordForm();
     alert('Password berhasil diperbarui! 🔑');
@@ -1513,22 +1562,17 @@
       try {
         const importedData = JSON.parse(e.target.result);
         
-        if (!importedData.users || !importedData.courses || !importedData.tasks) {
+        if (!importedData.courses || !importedData.tasks) {
           alert('Format file JSON tidak valid, bree!');
           return;
         }
 
-        localStorage.setItem('app_users', JSON.stringify(importedData.users));
-        localStorage.setItem('app_courses', JSON.stringify(importedData.courses));
-        localStorage.setItem('app_tasks', JSON.stringify(importedData.tasks));
-        
-        if (importedData.currentUser) {
-          localStorage.setItem('app_current_user', JSON.stringify(importedData.currentUser));
-          currentUser = importedData.currentUser;
-        }
-
-        alert('Data berhasil di-restore dari backup! Halaman bakal di-refresh otomatis ya bree 🚀');
-        location.reload();
+        coursesDB = importedData.courses.map(c => ({ ...c, userId: currentUser.id }));
+        tasksDB = importedData.tasks.map(t => ({ ...t, userId: currentUser.id }));
+        localStorage.setItem('app_courses', JSON.stringify(coursesDB));
+        localStorage.setItem('app_tasks', JSON.stringify(tasksDB));
+        alert('Data berhasil di-restore dan disinkron ke cloud 🚀');
+        cloudSave().then(() => location.reload());
       } catch (err) {
         alert('Gagal membaca file JSON, pastikan file-nya bener!');
         console.error(err);
@@ -1572,9 +1616,12 @@
     document.getElementById('statThisWeek').innerText = thisWeekTasks.length;
   }
 
-  function logout() {
-    currentUser = null;
-    localStorage.removeItem('app_current_user');
+  async function logout() {
+    clearTimeout(syncTimer);
+    await cloudSave();
+    await window.supabase.auth.signOut();
+    currentUser = null; coursesDB = []; tasksDB = [];
+    ['app_current_user','app_courses','app_tasks'].forEach(k => localStorage.removeItem(k));
     document.getElementById('dashboardView').classList.add('hidden');
     document.getElementById('scheduleView').classList.add('hidden');
     document.getElementById('taskView').classList.add('hidden');
