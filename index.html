@@ -2056,21 +2056,42 @@
     alert('Password berhasil diperbarui! 🔑');
   }
 
-  function exportAppData() {
+  async function exportAppData() {
     const backupData = {
-      users: JSON.parse(localStorage.getItem('app_users')) || [],
       currentUser: currentUser,
-      courses: JSON.parse(localStorage.getItem('app_courses')) || [],
-      tasks: JSON.parse(localStorage.getItem('app_tasks')) || []
+      courses: coursesDB.filter(c => c.userId === currentUser.id),
+      tasks: tasksDB.filter(t => t.userId === currentUser.id)
     };
+    const json = JSON.stringify(backupData, null, 2);
+    const safeName = String(currentUser.name || 'user').replace(/[^\w-]+/g, '_').slice(0, 40) || 'user';
+    const filename = `academic_planner_backup_${safeName}.json`;
 
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
-    const downloadAnchor = document.createElement('a');
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `academic_planner_backup_${currentUser.name.replace(/\s+/g, '_')}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
+    // iPhone/iPad: atribut download di Safari nggak jalan buat data URL, jadi pakai lembar Bagikan -> "Simpan ke Berkas"
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS && navigator.share && navigator.canShare) {
+      for (const type of ['application/json', 'text/plain']) {
+        const file = new File([json], filename, { type });
+        if (!navigator.canShare({ files: [file] })) continue;
+        try {
+          await navigator.share({ files: [file], title: 'Backup Academic Planner' });
+          return;
+        } catch (err) {
+          if (err && err.name === 'AbortError') return; // user menutup lembar Bagikan
+          break; // gagal lain -> coba cara biasa di bawah
+        }
+      }
+    }
+
+    // laptop & Android: download biasa lewat Blob (lebih andal daripada data URL)
+    const url = URL.createObjectURL(new Blob([json], { type: 'application/json' }));
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    if (isIOS) window.open(url, '_blank'); // cadangan terakhir kalau Bagikan nggak tersedia
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
     alert('Mantap bree! File backup data berhasil di-download 💾🎉');
   }
 
