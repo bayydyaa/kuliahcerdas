@@ -408,6 +408,51 @@
     body:has(#bottomNav.hidden) #loginView, body:has(#bottomNav.hidden) #registerView, body:has(#bottomNav.hidden) #resetView { margin-top: 58px; }
     [dir="rtl"] .toggle-password { right: auto; left: 12px; }
     [dir="rtl"] .password-wrapper input { padding-right: 12px; padding-left: 40px; }
+
+    /* ===== RESPONSIF: HP kecil, HP besar, tablet, laptop ===== */
+    :focus-visible { outline: 2px solid rgba(129, 140, 248, 0.85); outline-offset: 2px; }
+    .container { width: 100%; }
+    @media (hover: hover) {
+      .card:hover, .stat-card:hover { transform: translateY(-2px); }
+      .card, .stat-card { transition: transform 0.25s ease, background-color 0.3s ease, border-color 0.3s ease; }
+      .item-card:hover { background-color: var(--item-hover); }
+    }
+    @media (max-width: 360px) {
+      .container { padding: 14px; }
+      .stats-grid { gap: 8px; }
+      .stat-card { padding: 10px 4px; }
+      .nav-item { font-size: 10px; }
+      .nav-icon { font-size: 18px; }
+    }
+    @media (min-width: 600px) {
+      .container { max-width: 640px; padding: 24px; }
+    }
+    @media (min-width: 900px) {
+      .container { max-width: 960px; padding: 28px 32px; }
+      .bottom-nav { max-width: 540px; }
+      #loginView, #registerView, #resetView { max-width: 460px; margin-left: auto; margin-right: auto; }
+      #dashboardView, #calendarView, #profileView {
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 22px; align-items: start;
+      }
+      #dashboardView > .header-user, #dashboardView > .semester-box, #dashboardView > .stats-grid,
+      #dashboardView > .quote-card, #dashboardView > .card,
+      #calendarView > .section-title, #profileView > .section-title { grid-column: 1 / -1; }
+      #courseList, #scheduleList, #taskList {
+        display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px 16px;
+      }
+      #courseList > .day-header, #scheduleList > .day-header, #courseList > p, #scheduleList > p, #taskList > p { grid-column: 1 / -1; }
+      #courseList .item-card, #scheduleList .item-card, #taskList .item-card {
+        border: 1px solid var(--border); border-radius: 16px; background-color: var(--card-bg-solid);
+      }
+    }
+    @media (min-width: 1280px) {
+      .container { max-width: 1120px; }
+      .bottom-nav { max-width: 600px; }
+    }
+    @media (max-height: 480px) and (orientation: landscape) {
+      body { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
+      .bottom-nav { bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
+    }
     /* ===== END TEMA ===== */
   </style>
 </head>
