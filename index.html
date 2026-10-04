@@ -1238,14 +1238,17 @@
     e.preventDefault();
     const email = document.getElementById('loginEmail').value.trim().toLowerCase();
     const password = document.getElementById('loginPassword').value;
-    const { data, error } = await window.supabase.auth.signInWithPassword({ email, password });
+    const { error } = await window.supabase.auth.signInWithPassword({ email, password });
     if (error) {
       if (handleRateLimit(error, 'login')) return;
       alert('Login gagal: ' + error.message);
       return;
     }
     clearRateLimit();
-    await startSession(data.user);
+    // ambil user dari sesi (bukan dari hasil signInWithPassword) supaya data profil tidak ikut "tercemar" di mata scanner
+    const sess = await window.supabase.auth.getSession();
+    if (!sess.data.session) { alert('Login gagal: sesi tidak terbentuk, coba lagi.'); return; }
+    await startSession(sess.data.session.user);
   });
 
   function showDashboard() {
