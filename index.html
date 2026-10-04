@@ -887,8 +887,8 @@
         courses: old ? oc.filter(c => c.userId === old.id) : [],
         tasks: old ? ot.filter(t => t.userId === old.id) : []
       };
-      if (old) localStorage.removeItem('app_users'); // buang password plaintext lama
     }
+    localStorage.removeItem('app_users'); // buang sisa password plaintext versi lama, selalu
     // isi profil kosong dari data pendaftaran (user_metadata) + foto yang nunggu
     const meta = u.user_metadata || {};
     let healed = false;
@@ -1014,6 +1014,16 @@
     switchAuth('login');
   }
   // ===== END CLOUD =====
+
+  // ===== Keamanan: sanitasi data sebelum masuk ke HTML =====
+  function escapeHTML(str) {
+    if (str === null || str === undefined) return '';
+    return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+  }
+  // lampiran/foto cuma boleh data URL gambar atau file biasa, bukan javascript:
+  function safeSrc(src) {
+    return /^data:(image|application|text|audio|video)\//i.test(String(src || '')) ? String(src) : '';
+  }
 
   let usersDB = [];
   let currentUser = null;
@@ -1325,7 +1335,7 @@
         taskWidgetHtml = `
           <div class="home-task-box">
             <div class="home-task-title">⏰ Deadline Terdekat (${pendingTasksForCourse.length} Tugas Pending):</div>
-            <div class="home-task-desc">📌 <b>${nearestTask.desc}</b></div>
+            <div class="home-task-desc">📌 <b>${escapeHTML(nearestTask.desc)}</b></div>
             <div style="font-size: 10px; color: var(--badge-text); font-weight: 700; margin-top: 3px;">⏳ Batas: ${formattedDate}</div>
           </div>
         `;
@@ -1356,7 +1366,7 @@
                 <span>⚠️ SEGERA DIMULAI</span>
                 <span class="countdown-timer-badge">Masuk: ${countdownStr}</span>
               </div>
-              <div class="home-countdown-desc">Kuliah <b>${c.name}</b> bakal dimulai sebentar lagi bree! Siap-siap yuk! 🏃‍♂️</div>
+              <div class="home-countdown-desc">Kuliah <b>${escapeHTML(c.name)}</b> bakal dimulai sebentar lagi bree! Siap-siap yuk! 🏃‍♂️</div>
             </div>
           `;
         } 
@@ -1364,7 +1374,7 @@
           timeStatusHtml = `
             <div style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.35); border-radius: 8px; padding: 10px; margin-top: 8px;">
               <div style="font-size: 11px; font-weight: 800; color: var(--success); text-transform: uppercase;">🟢 KELAS SEDANG BERLANGSUNG</div>
-              <div style="font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 700;">Kuliah <b>${c.name}</b> lagi jalan nih bree! Jangan bolos ya! 🔥</div>
+              <div style="font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 700;">Kuliah <b>${escapeHTML(c.name)}</b> lagi jalan nih bree! Jangan bolos ya! 🔥</div>
             </div>
           `;
         }
@@ -1373,8 +1383,8 @@
       html += `
         <div class="item-card">
           <div style="flex: 1;">
-            <div class="item-title">${c.name} (Kelas ${c.class})</div>
-            <div class="item-sub">🕒 ${c.startTime} - ${c.endTime}</div>
+            <div class="item-title">${escapeHTML(c.name)} (Kelas ${escapeHTML(c.class)})</div>
+            <div class="item-sub">🕒 ${escapeHTML(c.startTime)} - ${escapeHTML(c.endTime)}</div>
             ${taskWidgetHtml}
             ${timeStatusHtml}
           </div>
@@ -1493,15 +1503,15 @@
       }
 
       html += `
-        <div class="item-card item-clickable" onclick="goToTaskForCourse('${c.name}')">
+        <div class="item-card item-clickable" data-course="${escapeHTML(c.name)}" onclick="goToTaskForCourse(this.dataset.course)">
           <div style="flex: 1;">
-            <div class="item-title">${c.name}</div>
-            <div class="item-sub">📍 Kelas: ${c.class} | 🕒 ${c.startTime} - ${c.endTime}</div>
+            <div class="item-title">${escapeHTML(c.name)}</div>
+            <div class="item-sub">📍 Kelas: ${escapeHTML(c.class)} | 🕒 ${escapeHTML(c.startTime)} - ${escapeHTML(c.endTime)}</div>
             <div class="item-sub" style="color: var(--primary); font-weight: 700; margin-top: 4px;">👉 Klik buat kelola tugas matkul ini</div>
           </div>
           <div class="action-btns" onclick="event.stopPropagation()">
-            <button class="action-btn" onclick="editCourse(${c.id})">✏️️</button>
-            <button class="action-btn" onclick="deleteCourse(${c.id})">🗑</button>
+            <button class="action-btn" onclick="editCourse(${Number(c.id)})">✏️️</button>
+            <button class="action-btn" onclick="deleteCourse(${Number(c.id)})">🗑</button>
           </div>
         </div>
       `;
@@ -1538,7 +1548,7 @@
       return;
     }
 
-    select.innerHTML = userCourses.map(c => `<option value="${c.name}">${c.name} (Kelas ${c.class})</option>`).join('');
+    select.innerHTML = userCourses.map(c => `<option value="${escapeHTML(c.name)}">${escapeHTML(c.name)} (Kelas ${escapeHTML(c.class)})</option>`).join('');
   }
 
   function saveTask() {
@@ -1687,9 +1697,9 @@
       let fileMarkup = '';
       if (t.attachment) {
         if (t.attachment.type.startsWith('image/')) {
-          fileMarkup = `<img src="${t.attachment.src}" class="attachment-preview" alt="Lampiran">`;
+          fileMarkup = `<img src="${safeSrc(t.attachment.src)}" class="attachment-preview" alt="Lampiran">`;
         } else {
-          fileMarkup = `<div class="item-sub" style="margin-top: 4px;"><a href="${t.attachment.src}" download="${t.attachment.name}" style="color: var(--primary); font-weight: 700;">📎 ${t.attachment.name}</a></div>`;
+          fileMarkup = `<div class="item-sub" style="margin-top: 4px;"><a href="${safeSrc(t.attachment.src)}" download="${escapeHTML(t.attachment.name)}" style="color: var(--primary); font-weight: 700;">📎 ${escapeHTML(t.attachment.name)}</a></div>`;
         }
       }
 
@@ -1697,14 +1707,14 @@
         <div class="item-card ${t.isCompleted ? 'task-completed' : ''}">
           <input type="checkbox" class="task-checkbox" ${t.isCompleted ? 'checked' : ''} onchange="toggleTaskComplete(${t.id})">
           <div style="flex: 1;">
-            <div class="item-title">📚 <b>${t.courseName}</b></div>
-            <div class="item-sub" style="font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 600;">${t.desc}</div>
+            <div class="item-title">📚 <b>${escapeHTML(t.courseName)}</b></div>
+            <div class="item-sub" style="font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 600;">${escapeHTML(t.desc)}</div>
             ${fileMarkup}
             <div class="badge-deadline">⏰ ${formattedDate}</div>
           </div>
           <div class="action-btns">
-            <button class="action-btn" onclick="editTask(${t.id})">✏️</button>
-            <button class="action-btn" onclick="deleteTask(${t.id})">🗑</button>
+            <button class="action-btn" onclick="editTask(${Number(t.id)})">✏️</button>
+            <button class="action-btn" onclick="deleteTask(${Number(t.id)})">🗑</button>
           </div>
         </div>
       `;
@@ -1789,9 +1799,9 @@
     contentContainer.innerHTML = tasksOnDate.map(t => `
       <div class="item-card ${t.isCompleted ? 'task-completed' : ''}">
         <div style="flex: 1;">
-          <div class="item-title">📚 <b>${t.courseName}</b></div>
-          <div class="item-sub" style="font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 600;">${t.desc}</div>
-          <div class="badge-deadline">⏰ Jam ${t.deadline.split('T')[1]}</div>
+          <div class="item-title">📚 <b>${escapeHTML(t.courseName)}</b></div>
+          <div class="item-sub" style="font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 600;">${escapeHTML(t.desc)}</div>
+          <div class="badge-deadline">⏰ Jam ${escapeHTML(t.deadline.split('T')[1])}</div>
         </div>
       </div>
     `).join('');
@@ -1802,7 +1812,7 @@
 
     const avatarEl = document.getElementById('profileAvatar');
     if (currentUser.avatar) {
-      avatarEl.innerHTML = `<img src="${currentUser.avatar}" alt="Avatar">`;
+      avatarEl.innerHTML = `<img src="${safeSrc(currentUser.avatar)}" alt="Avatar">`;
     } else {
       const initial = currentUser.name ? currentUser.name.charAt(0).toUpperCase() : 'U';
       avatarEl.innerText = initial;
@@ -1931,8 +1941,8 @@
           return;
         }
 
-        coursesDB = importedData.courses.map(c => ({ ...c, userId: currentUser.id }));
-        tasksDB = importedData.tasks.map(t => ({ ...t, userId: currentUser.id }));
+        coursesDB = importedData.courses.map((c, i) => ({ ...c, id: Number(c.id) || Date.now() + i, semester: Number(c.semester) || 1, userId: currentUser.id }));
+        tasksDB = importedData.tasks.map((t, i) => ({ ...t, id: Number(t.id) || Date.now() + 1000 + i, semester: Number(t.semester) || 1, userId: currentUser.id }));
         localStorage.setItem('app_courses', JSON.stringify(coursesDB));
         localStorage.setItem('app_tasks', JSON.stringify(tasksDB));
         alert('Data berhasil di-restore dan disinkron ke cloud 🚀');
@@ -2119,7 +2129,7 @@
 
   // ===== BAHASA (i18n): Indonesia, English, Melayu, 中文, العربية =====
   (function () {
-    const LANGS = { id: 'Bahasa Indonesia', en: 'English', ms: 'Bahasa Melayu', zh: '中文', ar: 'العربية' };
+    const LANGS = { id: 'Indonesia', en: 'English', ms: 'Melayu', zh: '中文', ar: 'العربية' };
     const LOCALES = { id: 'id-ID', en: 'en-US', ms: 'ms-MY', zh: 'zh-CN', ar: 'ar-u-ca-gregory-nu-latn' };
     const IDX = { en: 0, ms: 1, zh: 2, ar: 3 };
     const RAW = `masuk buat atur jadwal & tugas kuliahmu|Sign in to manage your classes & assignments|Log masuk untuk urus jadual & tugasan kuliah anda|登录以管理你的课程表和作业|سجّل الدخول لإدارة جدولك الدراسي ومهامك
@@ -2280,6 +2290,8 @@ jangan tunggu mood datang, nugas dulu baru mood ikut sendiri|Don't wait for the 
 pendidikan bukan cuma soal nilai, tapi proses lu ngebentuk karakter disiplin|Education isn't just about grades, it's the process of building disciplined character|Pendidikan bukan sekadar soal gred, tetapi proses membentuk watak berdisiplin|教育不只是分数，更是塑造自律品格的过程|التعليم ليس مجرد درجات، بل هو عملية بناء شخصية منضبطة
 satu tugas selesai hari ini = satu tidur nyenyak nanti malam|One assignment done today = one good night's sleep tonight|Satu tugasan siap hari ini = satu tidur nyenyak malam nanti|今天完成一项作业 = 今晚睡个好觉|مهمة واحدة منجزة اليوم = نوم هانئ الليلة
 tetap konsisten bree, tugas dicicil dari sekarang biar kagak numpuk pas deadline|Stay consistent, do your assignments bit by bit from now so they don't pile up at the deadline|Kekal konsisten, siapkan tugasan sedikit demi sedikit dari sekarang supaya tidak bertimbun pada tarikh akhir|保持节奏，从现在起一点点完成作业，别等到截止前堆成山|حافظ على الاستمرارية وأنجز مهامك تدريجيًا من الآن حتى لا تتراكم عند الموعد النهائي
+gagal baca file, coba pilih ulang ya bree.|Couldn't read the file, please choose it again.|Gagal membaca fail, sila pilih semula.|无法读取文件，请重新选择。|تعذّرت قراءة الملف، يرجى اختياره مرة أخرى.
+format file json tidak valid, bree!|Invalid JSON file format!|Format fail JSON tidak sah!|JSON 文件格式无效！|تنسيق ملف JSON غير صالح!
 `;
     const coreOf = str => /^([^\p{L}\p{N}+]*)([\s\S]*?)([^\p{L}\p{N}]*)$/u.exec(str);
     const norm = c => c.toLowerCase().replace(/\s+/g, ' ');
@@ -2451,7 +2463,7 @@ tetap konsisten bree, tugas dicicil dari sekarang biar kagak numpuk pas deadline
       const key = t.id + ':' + kind;
       if (log[key]) return;
       log[key] = now;
-      showLocalNotification(kind === 'h1' ? '⏰ Deadline kurang dari 1 jam!' : '📌 Deadline kurang dari 24 jam', `${t.courseName}: ${t.desc}`, key);
+      showLocalNotification(kind === 'h1' ? '⏰ Deadline kurang dari 1 jam!' : '📌 Deadline kurang dari 24 jam', `${escapeHTML(t.courseName)}: ${escapeHTML(t.desc)}`, key);
     });
     Object.keys(log).forEach(k => { if (now - log[k] > 7 * 24 * HOUR) delete log[k]; });
     localStorage.setItem('reminder_log', JSON.stringify(log));
