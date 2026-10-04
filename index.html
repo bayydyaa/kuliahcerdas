@@ -453,6 +453,105 @@
       body { padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px)); }
       .bottom-nav { bottom: calc(6px + env(safe-area-inset-bottom, 0px)); }
     }
+
+    /* ===== MOTION: animasi halus dari yang besar sampai yang kecil ===== */
+    :root { --ease-out: cubic-bezier(0.16, 1, 0.3, 1); --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); --dir: 0; }
+    html { scroll-behavior: smooth; }
+    * { -webkit-tap-highlight-color: transparent; }
+    ::selection { background: rgba(129, 140, 248, 0.45); color: inherit; }
+    * { scrollbar-width: thin; scrollbar-color: rgba(129, 140, 248, 0.45) transparent; }
+
+    /* 1. pindah halaman: tiap blok masuk bergantian, arah ikut posisi tab */
+    .view-section { animation: none; }
+    .view-section > * { animation: riseIn 0.6s var(--ease-out) backwards; }
+    .view-section > :nth-child(1) { animation-delay: 0ms; }
+    .view-section > :nth-child(2) { animation-delay: 60ms; }
+    .view-section > :nth-child(3) { animation-delay: 120ms; }
+    .view-section > :nth-child(4) { animation-delay: 180ms; }
+    .view-section > :nth-child(5) { animation-delay: 240ms; }
+    .view-section > :nth-child(6) { animation-delay: 300ms; }
+    .view-section > :nth-child(7) { animation-delay: 360ms; }
+    .view-section > :nth-child(8) { animation-delay: 420ms; }
+    .card.view-section { animation: cardPop 0.7s var(--ease-spring) backwards; }
+    @keyframes riseIn {
+      from { opacity: 0; transform: translate3d(calc(var(--dir) * 26px), 14px, 0) scale(0.985); }
+      to { opacity: 1; transform: none; }
+    }
+    @keyframes cardPop { from { opacity: 0; transform: translateY(18px) scale(0.96); } to { opacity: 1; transform: none; } }
+
+    /* 2. isi daftar baru muncul menyusul (hanya saat pindah tab, bukan tiap ada perubahan) */
+    body.view-entering .item-card { animation: riseIn 0.5s var(--ease-out) backwards; }
+    body.view-entering .item-card:nth-child(1) { animation-delay: 120ms; }
+    body.view-entering .item-card:nth-child(2) { animation-delay: 165ms; }
+    body.view-entering .item-card:nth-child(3) { animation-delay: 210ms; }
+    body.view-entering .item-card:nth-child(4) { animation-delay: 255ms; }
+    body.view-entering .item-card:nth-child(5) { animation-delay: 300ms; }
+    body.view-entering .item-card:nth-child(6) { animation-delay: 345ms; }
+    body.view-entering .item-card:nth-child(7) { animation-delay: 390ms; }
+    body.view-entering .item-card:nth-child(8) { animation-delay: 435ms; }
+    body.view-entering .item-card:nth-child(9) { animation-delay: 480ms; }
+    body.view-entering .item-card:nth-child(10) { animation-delay: 525ms; }
+
+    /* 3. form yang dibuka dan banner */
+    .card[id$="Form"] { animation: formIn 0.5s var(--ease-out) backwards; transform-origin: top center; }
+    @keyframes formIn { from { opacity: 0; transform: translateY(-10px) scale(0.98); } to { opacity: 1; transform: none; } }
+    #rateLimitBanner:not(.hidden) { animation: bannerIn 0.5s var(--ease-spring); }
+    @keyframes bannerIn { from { transform: translateY(-100%); opacity: 0; } to { transform: none; opacity: 1; } }
+
+    /* 4. kalender: ganti bulan geser, tanggal muncul bergelombang */
+    .calendar-days.slide-l { animation: slideL 0.45s var(--ease-out); }
+    .calendar-days.slide-r { animation: slideR 0.45s var(--ease-out); }
+    @keyframes slideL { from { opacity: 0; transform: translateX(34px); } to { opacity: 1; transform: none; } }
+    @keyframes slideR { from { opacity: 0; transform: translateX(-34px); } to { opacity: 1; transform: none; } }
+    .calendar-days .cal-day { animation: dayPop 0.45s var(--ease-spring) backwards; }
+    .calendar-days .cal-day:nth-child(7n+1) { animation-delay: 0ms; }
+    .calendar-days .cal-day:nth-child(7n+2) { animation-delay: 22ms; }
+    .calendar-days .cal-day:nth-child(7n+3) { animation-delay: 44ms; }
+    .calendar-days .cal-day:nth-child(7n+4) { animation-delay: 66ms; }
+    .calendar-days .cal-day:nth-child(7n+5) { animation-delay: 88ms; }
+    .calendar-days .cal-day:nth-child(7n+6) { animation-delay: 110ms; }
+    .calendar-days .cal-day:nth-child(7n+7) { animation-delay: 132ms; }
+    @keyframes dayPop { from { opacity: 0; transform: scale(0.8); } to { opacity: 1; transform: none; } }
+
+    /* 5. respons sentuhan dan hover */
+    .btn, .action-btn, .day-tab, .cal-btn { position: relative; overflow: hidden; }
+    .btn, .action-btn, .day-tab, .cal-btn, .theme-toggle-btn, .lang-select {
+      transition: transform 0.4s var(--ease-spring), box-shadow 0.3s ease, background-color 0.3s ease, border-color 0.3s ease, color 0.25s ease, opacity 0.25s ease;
+    }
+    .btn:active, .cal-btn:active { transform: scale(0.97); }
+    .action-btn:active { transform: scale(0.86); }
+    .action-btn:hover { transform: translateY(-1px) scale(1.06); }
+    .item-clickable { transition: transform 0.35s var(--ease-spring), background-color 0.25s ease; }
+    .item-clickable:active { transform: scale(0.985); }
+    .theme-toggle-btn:active { transform: scale(0.88) rotate(18deg); }
+    .theme-toggle-btn.spin { animation: spinPop 0.7s var(--ease-spring); }
+    @keyframes spinPop { 0% { transform: rotate(0) scale(1); } 50% { transform: rotate(200deg) scale(0.85); } 100% { transform: rotate(360deg) scale(1); } }
+    .toggle-password { transition: transform 0.3s var(--ease-spring), opacity 0.2s ease; opacity: 0.8; }
+    .toggle-password:hover { transform: translateY(-50%) scale(1.18); opacity: 1; }
+    .toggle-password:active { transform: translateY(-50%) scale(0.88); }
+    .ripple { position: absolute; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, rgba(255, 255, 255, 0.5), transparent 62%); transform: scale(0); animation: rippleOut 0.65s var(--ease-out) forwards; }
+    @keyframes rippleOut { to { transform: scale(1); opacity: 0; } }
+
+    /* 6. input: label ikut menyala, kolom naik sedikit pas difokus */
+    .form-group label { transition: color 0.25s ease, transform 0.3s var(--ease-out); }
+    .form-group:focus-within label { color: #a5b4fc; transform: translateX(2px); }
+    [data-theme="light"] .form-group:focus-within label { color: var(--primary-hover); }
+    .form-group input, .form-group select, .form-group textarea { transition: border-color 0.25s ease, box-shadow 0.35s ease, background-color 0.25s ease, transform 0.3s var(--ease-out); }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { transform: translateY(-1px); }
+
+    /* 7. latar hidup: cahaya melayang pelan (cuma transform, ringan di GPU) */
+    body::after { inset: -14%; will-change: transform; animation: ambientDrift 38s ease-in-out infinite alternate; }
+    @keyframes ambientDrift { from { transform: translate3d(-2%, 1.5%, 0) scale(1.06); } to { transform: translate3d(2%, -1.5%, 0) scale(1); } }
+
+    /* 8. progress bar tipis saat sinkron ke cloud */
+    #topProgress { position: fixed; top: 0; left: 0; height: 2.5px; width: 0; z-index: 10000; pointer-events: none; opacity: 0;
+      background: linear-gradient(90deg, #6366f1, #a78bfa, #22d3ee); box-shadow: 0 0 10px rgba(129, 140, 248, 0.8);
+      transition: width 0.35s ease, opacity 0.3s ease; }
+
+    /* hormati pengguna yang mematikan animasi di HP/laptopnya */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { animation-duration: 0.01ms !important; animation-iteration-count: 1 !important; transition-duration: 0.01ms !important; scroll-behavior: auto !important; }
+    }
     /* ===== END TEMA ===== */
   </style>
 </head>
@@ -2465,6 +2564,100 @@ format file json tidak valid, bree!|Invalid JSON file format!|Format fail JSON t
     };
   })();
   // ===== END BAHASA =====
+
+  // ===== MOTION: animasi kecil yang jarang disadari =====
+  (function () {
+    const reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const ORDER = ['home', 'schedule', 'task', 'calendar', 'profile'];
+    let prev = 'home', enterTimer = 0;
+
+    // arah masuk halaman mengikuti posisi tab + tandai "lagi masuk" biar daftar boleh menyusul
+    const _switch = switchTab;
+    switchTab = function (tab) {
+      const a = ORDER.indexOf(prev), b = ORDER.indexOf(tab);
+      document.documentElement.style.setProperty('--dir', b > a ? 1 : b < a ? -1 : 0);
+      prev = tab;
+      document.body.classList.add('view-entering');
+      clearTimeout(enterTimer);
+      enterTimer = setTimeout(() => document.body.classList.remove('view-entering'), 900);
+      return _switch.apply(this, arguments);
+    };
+
+    // tombol tema berputar
+    const _theme = toggleTheme;
+    toggleTheme = function () {
+      const b = document.getElementById('themeToggleBtn');
+      if (b) { b.classList.remove('spin'); void b.offsetWidth; b.classList.add('spin'); }
+      return _theme.apply(this, arguments);
+    };
+
+    // ganti bulan kalender: geser sesuai arah
+    const slide = d => {
+      const c = document.getElementById('calendarDaysContainer');
+      if (!c) return;
+      c.classList.remove('slide-l', 'slide-r'); void c.offsetWidth;
+      c.classList.add(d > 0 ? 'slide-l' : 'slide-r');
+    };
+    const _prev = prevMonth, _next = nextMonth;
+    prevMonth = function () { _prev.apply(this, arguments); slide(-1); };
+    nextMonth = function () { _next.apply(this, arguments); slide(1); };
+
+    // angka statistik menghitung naik/turun
+    function countUp(el) {
+      if (!el) return;
+      const cfg = { childList: true, characterData: true, subtree: true };
+      let cur = parseInt(el.textContent, 10) || 0, raf = 0;
+      const obs = new MutationObserver(() => {
+        const target = parseInt(el.textContent, 10);
+        if (isNaN(target)) return;
+        cancelAnimationFrame(raf);
+        if (reduce || target === cur) { cur = target; return; }
+        const from = cur, t0 = performance.now(), dur = 650;
+        const set = v => { obs.disconnect(); el.textContent = v; cur = v; obs.observe(el, cfg); };
+        set(from);
+        (function f(now) {
+          const k = Math.min(1, (now - t0) / dur), e = 1 - Math.pow(1 - k, 3);
+          set(Math.round(from + (target - from) * e));
+          if (k < 1) raf = requestAnimationFrame(f);
+        })(t0);
+      });
+      obs.observe(el, cfg);
+    }
+    ['statPending', 'statThisWeek', 'statCourses'].forEach(id => countUp(document.getElementById(id)));
+
+    // progress bar tipis di atas layar saat sinkron cloud / login
+    const bar = document.createElement('div');
+    bar.id = 'topProgress';
+    document.body.appendChild(bar);
+    let n = 0, tick = 0;
+    const pStart = () => {
+      if (n++ > 0) return;
+      clearInterval(tick); bar.style.opacity = 1; bar.style.width = '12%';
+      let w = 12; tick = setInterval(() => { w += (90 - w) * 0.12; bar.style.width = w + '%'; }, 250);
+    };
+    const pDone = () => {
+      if (--n > 0) return;
+      n = 0; clearInterval(tick); bar.style.width = '100%';
+      setTimeout(() => { bar.style.opacity = 0; setTimeout(() => { bar.style.width = '0'; }, 350); }, 200);
+    };
+    const _cloud = cloudSave, _sess = startSession;
+    cloudSave = async function () { pStart(); try { return await _cloud.apply(this, arguments); } finally { pDone(); } };
+    startSession = async function () { pStart(); try { return await _sess.apply(this, arguments); } finally { pDone(); } };
+
+    // riak air kecil di tombol saat ditekan
+    document.addEventListener('pointerdown', e => {
+      if (reduce) return;
+      const b = e.target.closest && e.target.closest('.btn, .action-btn, .day-tab, .cal-btn');
+      if (!b) return;
+      const r = b.getBoundingClientRect(), d = Math.max(r.width, r.height) * 1.6;
+      const s = document.createElement('span');
+      s.className = 'ripple';
+      s.style.cssText = `width:${d}px;height:${d}px;left:${e.clientX - r.left - d / 2}px;top:${e.clientY - r.top - d / 2}px`;
+      b.appendChild(s);
+      setTimeout(() => s.remove(), 700);
+    }, { passive: true });
+  })();
+  // ===== END MOTION =====
 
   // ===== Pengingat deadline (jalan selama app kebuka) =====
   const REMIND_KEY = 'reminder_enabled';
