@@ -401,6 +401,19 @@
     }
     .cal-day.today { border: 1.5px solid rgba(129, 140, 248, 0.7); background-color: rgba(99, 102, 241, 0.14); }
     .action-btn { box-shadow: inset 0 1px 0 var(--glass-hi); }
+    /* tombol tema (fixed di pojok) jangan nutupin tombol di header */
+    @media (max-width: 899px) { .section-title, .header-user { padding-right: 52px; } }
+    /* kartu alarm di dalam aplikasi */
+    #alarmStack { position: fixed; top: calc(10px + env(safe-area-inset-top, 0px)); left: 12px; right: 12px; z-index: 10001; display: flex; flex-direction: column; gap: 8px; align-items: center; pointer-events: none; }
+    .alarm-card { pointer-events: auto; width: 100%; max-width: 420px; display: flex; gap: 12px; align-items: flex-start; padding: 12px 14px; border-radius: 20px; cursor: pointer;
+      background-color: var(--card-bg-solid); background-image: var(--grain), linear-gradient(135deg, rgba(99, 102, 241, 0.35), rgba(236, 72, 153, 0.18)); background-size: 160px, auto;
+      -webkit-backdrop-filter: blur(18px) saturate(150%); backdrop-filter: blur(18px) saturate(150%); border: 1px solid rgba(255, 255, 255, 0.3);
+      box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.4); color: var(--text); animation: bannerIn 0.5s var(--ease-spring); }
+    .alarm-card.urgent { animation: bannerIn 0.5s var(--ease-spring), alarmPulse 1.2s ease-in-out 0.5s 4; border-color: rgba(248, 113, 113, 0.7); }
+    .alarm-card.out { transition: transform 0.35s ease, opacity 0.3s ease; transform: translateY(-120%); opacity: 0; }
+    .alarm-card b { display: block; font-size: 13px; font-weight: 800; margin-bottom: 2px; }
+    .alarm-card span { font-size: 12px; color: var(--muted); font-weight: 600; word-break: break-word; }
+    @keyframes alarmPulse { 0%, 100% { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4), 0 0 0 0 rgba(248, 113, 113, 0.5); } 50% { box-shadow: 0 14px 34px rgba(0, 0, 0, 0.4), 0 0 0 10px rgba(248, 113, 113, 0); } }
     /* bahasa */
     #authLang { display: none; position: fixed; top: 16px; left: 16px; z-index: 50; }
     #bottomNav.hidden ~ #authLang { display: block; }
@@ -921,6 +934,7 @@
       </div>
       <div class="form-group" style="margin-bottom: 10px;"><label>🌐 Language / Bahasa</label><select class="lang-select" onchange="setLanguage(this.value)"></select></div>
       <button class="btn btn-secondary" id="reminderBtn" onclick="toggleReminders()">🔔 Pengingat Deadline: Mati</button>
+      <button class="btn btn-secondary" id="soundBtn" onclick="toggleSound()" style="margin-top: 10px;">🔊 Suara Alarm: Nyala</button>
       <button class="btn btn-secondary" onclick="toggleChangePasswordForm()">🔒 Ubah Kata Sandi</button>
       <button class="btn btn-secondary" onclick="exportAppData()" style="margin-top: 10px;">💾 Backup / Export Data (JSON)</button>
       <div class="form-group" style="margin-top: 10px; margin-bottom: 0;">
@@ -1715,16 +1729,19 @@
 
     const file = fileInput.files[0];
     if (file) {
-      const reader = new FileReader();
-      reader.onload = function(e) {
-        const fileData = {
-          name: file.name,
-          type: file.type,
-          src: e.target.result
-        };
-        processSaveTask(editId, courseName, desc, deadline, fileData);
-      };
-      reader.readAsDataURL(file);
+      const isImg = /^image\//.test(file.type);
+      if (!isImg && file.size > 1.5 * 1024 * 1024) {
+        alert('File terlalu besar (maks 1,5 MB). Pilih file yang lebih kecil atau pakai foto, bree!');
+        return;
+      }
+      const done = src => processSaveTask(editId, courseName, desc, deadline, { name: file.name, type: isImg ? 'image/jpeg' : file.type, src });
+      if (isImg) {
+        compressAttachment(file).then(done).catch(() => alert('Foto nggak bisa dibaca, coba foto lain ya bree.'));
+      } else {
+        const reader = new FileReader();
+        reader.onload = e => done(e.target.result);
+        reader.readAsDataURL(file);
+      }
     } else {
       let existingFile = null;
       if (editId) {
@@ -1733,6 +1750,23 @@
       }
       processSaveTask(editId, courseName, desc, deadline, existingFile);
     }
+  }
+
+  // foto lampiran dikecilkan (maks 1280px, JPEG) biar sinkron cloud nggak berat
+  function compressAttachment(file, max = 1280, quality = 0.75) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(file), img = new Image();
+      img.onload = () => {
+        const k = Math.min(1, max / Math.max(img.width, img.height));
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * k); c.height = Math.round(img.height * k);
+        c.getContext('2d').drawImage(img, 0, 0, c.width, c.height);
+        URL.revokeObjectURL(url);
+        resolve(c.toDataURL('image/jpeg', quality));
+      };
+      img.onerror = () => { URL.revokeObjectURL(url); reject(new Error('gambar tidak terbaca')); };
+      img.src = url;
+    });
   }
 
   function processSaveTask(editId, courseName, desc, deadline, fileData) {
@@ -2435,7 +2469,6 @@ peringatan: semua jadwal dan tugas kamu bakal dihapus permanen! yakin mau reset,
 password berhasil diperbarui!|Password updated successfully!|Kata laluan berjaya dikemas kini!|密码更新成功！|تم تحديث كلمة المرور بنجاح!
 password lama kamu salah, bree|Your old password is wrong!|Kata laluan lama anda salah!|旧密码不正确！|كلمة المرور القديمة غير صحيحة!
 password salah, akun nggak jadi dihapus|Wrong password, the account was not deleted.|Kata laluan salah, akaun tidak jadi dipadam.|密码错误，账号未被删除。|كلمة المرور خاطئة، لم يتم حذف الحساب.
-pengingat nyala 🔔 muncul pas tugas tinggal <24 jam dan <1 jam. catatan: baru jalan selama aplikasi kebuka atau masih aktif di latar belakang|Reminders are on 🔔 You'll be notified when an assignment has <24 hours and <1 hour left. Note: this only works while the app is open or still active in the background.|Peringatan dihidupkan 🔔 Anda akan dimaklumkan apabila tugasan tinggal <24 jam dan <1 jam. Nota: hanya berfungsi semasa aplikasi dibuka atau masih aktif di latar belakang.|提醒已开启 🔔 作业剩余不足24小时和不足1小时时会通知你。注意：仅在应用打开或仍在后台运行时有效。|تم تشغيل التذكير 🔔 ستصلك إشعارات عندما يتبقى أقل من 24 ساعة وأقل من ساعة على المهمة. ملاحظة: يعمل فقط أثناء فتح التطبيق أو بقائه نشطًا في الخلفية.
 permintaan diproses. kalau email ini terdaftar, link reset dikirim (cek inbox & spam). kalau 5 menit nggak ada email masuk, kemungkinan emailnya belum terdaftar atau akunnya udah dihapus, coba daftar aja|Request processed. If this email is registered, a reset link was sent (check inbox & spam). If nothing arrives in 5 minutes, the email may not be registered or the account was deleted, so try signing up. 📩|Permintaan diproses. Jika e-mel ini berdaftar, pautan tetapan semula dihantar (semak peti masuk & spam). Jika tiada e-mel dalam 5 minit, mungkin e-mel belum berdaftar atau akaun sudah dipadam, cuba daftar. 📩|请求已处理。如果该邮箱已注册，重置链接已发送（请查看收件箱和垃圾邮件）。5分钟内没收到邮件，可能是邮箱未注册或账号已删除，请尝试注册。📩|تمت معالجة الطلب. إذا كان البريد مسجلاً فقد أُرسل رابط إعادة التعيين (تحقق من الوارد والرسائل غير المرغوبة). إن لم يصلك شيء خلال 5 دقائق فربما البريد غير مسجل أو الحساب محذوف، جرّب التسجيل. 📩
 semua data berhasil direset dari nol|All data has been reset from scratch!|Semua data berjaya ditetapkan semula dari awal!|所有数据已从零重置！|تمت إعادة تعيين كل البيانات من الصفر!
 yakin? akun dan semua jadwal & tugas bakal dihapus permanen dan nggak bisa dibalikin|ARE YOU SURE? The account and all schedules & assignments will be permanently deleted and cannot be restored.|PASTI? Akaun dan semua jadual & tugasan akan dipadam selama-lamanya dan tidak boleh dipulihkan.|确定吗？账号以及所有课程表和作业将被永久删除，无法恢复。|هل أنت متأكد؟ سيتم حذف الحساب وكل الجداول والمهام نهائيًا ولا يمكن استرجاعها.
@@ -2463,6 +2496,15 @@ satu tugas selesai hari ini = satu tidur nyenyak nanti malam|One assignment done
 tetap konsisten bree, tugas dicicil dari sekarang biar kagak numpuk pas deadline|Stay consistent, do your assignments bit by bit from now so they don't pile up at the deadline|Kekal konsisten, siapkan tugasan sedikit demi sedikit dari sekarang supaya tidak bertimbun pada tarikh akhir|保持节奏，从现在起一点点完成作业，别等到截止前堆成山|حافظ على الاستمرارية وأنجز مهامك تدريجيًا من الآن حتى لا تتراكم عند الموعد النهائي
 gagal baca file, coba pilih ulang ya bree.|Couldn't read the file, please choose it again.|Gagal membaca fail, sila pilih semula.|无法读取文件，请重新选择。|تعذّرت قراءة الملف، يرجى اختياره مرة أخرى.
 format file json tidak valid, bree!|Invalid JSON file format!|Format fail JSON tidak sah!|JSON 文件格式无效！|تنسيق ملف JSON غير صالح!
+deadline kurang dari 15 menit|Deadline in under 15 minutes!|Tarikh akhir kurang 15 minit lagi!|截止时间不足15分钟！|الموعد النهائي بعد أقل من 15 دقيقة!
+deadline kurang dari 3 jam|Deadline in under 3 hours|Tarikh akhir kurang 3 jam lagi|截止时间不足3小时|الموعد النهائي بعد أقل من 3 ساعات
+deadline kurang dari 3 hari|Deadline in under 3 days|Tarikh akhir kurang 3 hari lagi|截止时间不足3天|الموعد النهائي بعد أقل من 3 أيام
+kuliah mulai kurang dari 15 menit lagi|Class starts in under 15 minutes|Kuliah bermula kurang 15 minit lagi|距离上课不足15分钟|تبدأ المحاضرة بعد أقل من 15 دقيقة
+kuliah dimulai sekarang|Class starts now!|Kuliah bermula sekarang!|现在开始上课！|المحاضرة تبدأ الآن!
+suara alarm: nyala|Alarm Sound: On|Bunyi Penggera: Hidup|闹铃声音：开|صوت المنبّه: يعمل
+suara alarm: mati|Alarm Sound: Off|Bunyi Penggera: Mati|闹铃声音：关|صوت المنبّه: متوقف
+file terlalu besar (maks 1,5 mb). pilih file yang lebih kecil atau pakai foto, bree!|File too large (max 1.5 MB). Choose a smaller file or use a photo.|Fail terlalu besar (maks 1.5 MB). Pilih fail yang lebih kecil atau guna foto.|文件太大（最大 1.5 MB）。请选择更小的文件或使用照片。|الملف كبير جدًا (الحد الأقصى 1.5 ميغابايت). اختر ملفًا أصغر أو استخدم صورة.
+pengingat nyala 🔔 kamu bakal diingatkan pas kuliah mau mulai dan pas deadline tugas makin dekat. catatan: baru jalan selama aplikasi kebuka atau aktif di latar belakang.|Reminders on 🔔 You'll be alerted before class starts and as assignment deadlines get close. Note: this only works while the app is open or active in the background.|Peringatan hidup 🔔 Anda akan diingatkan sebelum kuliah bermula dan apabila tarikh akhir tugasan hampir. Nota: hanya berfungsi semasa aplikasi dibuka atau aktif di latar belakang.|提醒已开启 🔔 上课前和作业截止临近时会提醒你。注意：仅在应用打开或在后台活跃时有效。|تم تفعيل التذكيرات 🔔 سننبّهك قبل بدء المحاضرة وعند اقتراب مواعيد المهام. ملاحظة: تعمل فقط أثناء فتح التطبيق أو نشاطه في الخلفية.
 `;
     const coreOf = str => /^([^\p{L}\p{N}+]*)([\s\S]*?)([^\p{L}\p{N}]*)$/u.exec(str);
     const norm = c => c.toLowerCase().replace(/\s+/g, ' ');
@@ -2689,6 +2731,7 @@ format file json tidak valid, bree!|Invalid JSON file format!|Format fail JSON t
     return localStorage.getItem(REMIND_KEY) === '1' && 'Notification' in window && Notification.permission === 'granted';
   }
   function updateReminderBtn() {
+    updateSoundBtn();
     const b = document.getElementById('reminderBtn');
     if (b) b.innerText = '🔔 Pengingat Deadline: ' + (reminderOn() ? 'Nyala' : 'Mati');
   }
@@ -2707,30 +2750,109 @@ format file json tidak valid, bree!|Invalid JSON file format!|Format fail JSON t
     localStorage.setItem(REMIND_KEY, '1');
     updateReminderBtn();
     checkDeadlines();
-    alert('Pengingat nyala 🔔 Muncul pas tugas tinggal <24 jam dan <1 jam. Catatan: baru jalan selama aplikasi kebuka atau masih aktif di latar belakang.');
+    alert('Pengingat nyala 🔔 Kamu bakal diingatkan pas kuliah mau mulai dan pas deadline tugas makin dekat. Catatan: baru jalan selama aplikasi kebuka atau aktif di latar belakang.');
   }
-  async function showLocalNotification(title, body, tag) {
+  async function showLocalNotification(title, body, tag, urgent) {
     title = window.t18 ? window.t18(title) : title;
     const reg = 'serviceWorker' in navigator ? await navigator.serviceWorker.getRegistration() : null;
-    if (reg) return reg.showNotification(title, { body, tag, icon: 'icon-192.png', badge: 'icon-192.png', data: { url: './' } });
-    new Notification(title, { body, tag, icon: 'icon-192.png' });
+    const opt = { body, tag, icon: 'icon-192.png', badge: 'icon-192.png', data: { url: './' }, requireInteraction: !!urgent, vibrate: urgent ? [250, 120, 250, 120, 400] : [150] };
+    if (reg) return reg.showNotification(title, opt);
+    new Notification(title, opt);
+  }
+
+  // ----- alarm di dalam aplikasi: kartu + bunyi + getar -----
+  const soundOn = () => localStorage.getItem('reminder_sound') !== '0';
+  let audioCtx = null;
+  document.addEventListener('pointerdown', () => {
+    try { audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)(); if (audioCtx.state === 'suspended') audioCtx.resume(); } catch (e) {}
+  }, { once: true, passive: true });
+  function updateSoundBtn() {
+    const b = document.getElementById('soundBtn');
+    if (b) b.innerText = '🔊 Suara Alarm: ' + (soundOn() ? 'Nyala' : 'Mati');
+  }
+  function toggleSound() {
+    localStorage.setItem('reminder_sound', soundOn() ? '0' : '1');
+    updateSoundBtn();
+    if (soundOn()) playAlarm();
+  }
+  function playAlarm() {
+    if (!soundOn()) return;
+    if (navigator.vibrate) navigator.vibrate([250, 120, 250, 120, 400]);
+    if (!audioCtx) return;
+    try {
+      [0, 0.32, 0.64].forEach(d => {
+        const o = audioCtx.createOscillator(), g = audioCtx.createGain(), t = audioCtx.currentTime + d;
+        o.type = 'sine'; o.frequency.value = 880; o.connect(g); g.connect(audioCtx.destination);
+        g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.35, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.24);
+        o.start(t); o.stop(t + 0.26);
+      });
+    } catch (e) {}
+  }
+  function showAlarmCard(title, body, urgent) {
+    let stack = document.getElementById('alarmStack');
+    if (!stack) { stack = document.createElement('div'); stack.id = 'alarmStack'; document.body.appendChild(stack); }
+    const card = document.createElement('div');
+    card.className = 'alarm-card' + (urgent ? ' urgent' : '');
+    const icon = document.createElement('div'); icon.style.fontSize = '24px'; icon.textContent = urgent ? '🚨' : '🔔';
+    const txt = document.createElement('div');
+    const b = document.createElement('b'); b.textContent = title;
+    const sp = document.createElement('span'); sp.textContent = body;
+    txt.append(b, sp); card.append(icon, txt); stack.appendChild(card);
+    const close = () => { card.classList.add('out'); setTimeout(() => card.remove(), 400); };
+    card.addEventListener('click', close);
+    setTimeout(close, urgent ? 30000 : 12000);
+    if (urgent) playAlarm();
+  }
+  // satu pintu: app lagi kebuka -> kartu alarm; app di latar belakang -> notifikasi sistem
+  function fireReminder(title, body, key, urgent) {
+    if (document.visibilityState === 'visible') showAlarmCard(window.t18 ? window.t18(title) : title, body, urgent);
+    else showLocalNotification(title, body, key, urgent);
+  }
+
+  const WEEKDAYS = ['Minggu', 'Senin', 'Selasa', 'Rabu', 'Kamis', 'Jumat', 'Sabtu'];
+  const DL_TIERS = [ // dari yang paling mepet; hanya tingkat paling mepet yang dibunyikan
+    ['m15', 15 * 60000, '🚨 Deadline kurang dari 15 menit!', true],
+    ['h1', 3600000, '⏰ Deadline kurang dari 1 jam!', true],
+    ['h3', 3 * 3600000, '⏰ Deadline kurang dari 3 jam', true],
+    ['d1', 24 * 3600000, '📌 Deadline kurang dari 24 jam', false],
+    ['d3', 72 * 3600000, '📌 Deadline kurang dari 3 hari', false]
+  ];
+  function checkClasses(log, now) {
+    const d = new Date(now), today = WEEKDAYS[d.getDay()], ymd = `${d.getFullYear()}-${d.getMonth() + 1}-${d.getDate()}`;
+    coursesDB.forEach(c => {
+      if (c.userId !== currentUser.id || c.day !== today || !c.startTime) return;
+      if (Number(c.semester) !== Number(currentUser.activeSemester)) return;
+      const [h, m] = String(c.startTime).split(':').map(Number);
+      const left = new Date(d.getFullYear(), d.getMonth(), d.getDate(), h, m).getTime() - now;
+      const kind = (left <= 0 && left > -5 * 60000) ? 'c0' : (left > 0 && left <= 15 * 60000) ? 'c15' : null;
+      if (!kind) return;
+      const key = `c:${c.id}:${ymd}:${kind}`;
+      if (log[key]) return;
+      log[key] = now;
+      if (kind === 'c0') log[`c:${c.id}:${ymd}:c15`] = now;
+      const place = c.class ? ` • ${window.t18 ? window.t18('Kelas') : 'Kelas'} ${c.class}` : '';
+      fireReminder(kind === 'c0' ? '🔔 Kuliah dimulai sekarang!' : '⏰ Kuliah mulai kurang dari 15 menit lagi',
+        `${c.name} • ${c.startTime}–${c.endTime}${place}`, key, true);
+    });
   }
   function checkDeadlines() {
     if (!currentUser || !reminderOn()) return;
     let log = {};
     try { log = JSON.parse(localStorage.getItem('reminder_log') || '{}'); } catch (e) {}
-    const now = Date.now(), HOUR = 3600000;
+    const now = Date.now(), DAY = 86400000;
     tasksDB.forEach(t => {
       if (t.userId !== currentUser.id || t.isCompleted || !t.deadline) return;
       const left = new Date(t.deadline).getTime() - now;
-      if (isNaN(left) || left <= 0 || left > 24 * HOUR) return;
-      const kind = left <= HOUR ? 'h1' : 'd1';
-      const key = t.id + ':' + kind;
-      if (log[key]) return;
-      log[key] = now;
-      showLocalNotification(kind === 'h1' ? '⏰ Deadline kurang dari 1 jam!' : '📌 Deadline kurang dari 24 jam', `${escapeHTML(t.courseName)}: ${escapeHTML(t.desc)}`, key);
+      if (isNaN(left) || left <= 0 || left > DL_TIERS[DL_TIERS.length - 1][1]) return;
+      const idx = DL_TIERS.findIndex(x => left <= x[1]);
+      const [kind, , title, urgent] = DL_TIERS[idx];
+      if (log[t.id + ':' + kind]) return;
+      DL_TIERS.slice(idx).forEach(x => { log[t.id + ':' + x[0]] = now; }); // tingkat lebih longgar ikut dianggap sudah lewat
+      const when = new Date(t.deadline).toLocaleString(window.getLocale ? window.getLocale() : undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      fireReminder(title, `${t.courseName}: ${t.desc} • ${when}`, t.id + ':' + kind, urgent);
     });
-    Object.keys(log).forEach(k => { if (now - log[k] > 7 * 24 * HOUR) delete log[k]; });
+    checkClasses(log, now);
+    Object.keys(log).forEach(k => { if (now - log[k] > 7 * DAY) delete log[k]; });
     localStorage.setItem('reminder_log', JSON.stringify(log));
   }
   // ===== END pengingat =====
