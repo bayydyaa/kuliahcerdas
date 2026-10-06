@@ -820,7 +820,7 @@
       </div>
       <div class="form-group">
         <label>LAMPIRAN (FOTO / GAMBAR / FILE / KAMERA)</label>
-        <input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx" capture="environment" style="font-size: 11px;">
+        <input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" style="font-size: 11px;">
       </div>
       <div class="form-group">
         <label>DEADLINE (TANGGAL & WAKTU)</label>
@@ -1752,6 +1752,30 @@
     }
   }
 
+  // lampiran non-foto: ubah data URL -> Blob. (data URL + atribut download diabaikan Safari iPhone)
+  function openAttachment(id) {
+    const t = tasksDB.find(x => Number(x.id) === Number(id));
+    if (!t || !t.attachment) return;
+    const src = safeSrc(t.attachment.src);
+    const m = /^data:([^;,]*)(;base64)?,([\s\S]*)$/.exec(src);
+    if (!m) { alert('Lampiran nggak bisa dibuka, coba upload ulang ya bree.'); return; }
+    let bin;
+    try { bin = m[2] ? atob(m[3]) : decodeURIComponent(m[3]); } catch (e) { alert('Lampiran nggak bisa dibuka, coba upload ulang ya bree.'); return; }
+    const bytes = new Uint8Array(bin.length);
+    for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+    const blob = new Blob([bytes], { type: m[1] || t.attachment.type || 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    if (isIOS) {
+      if (!window.open(url, '_blank')) location.href = url;
+    } else {
+      const a = document.createElement('a');
+      a.href = url; a.download = t.attachment.name || 'lampiran';
+      document.body.appendChild(a); a.click(); a.remove();
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60000);
+  }
+
   // foto lampiran dikecilkan (maks 1280px, JPEG) biar sinkron cloud nggak berat
   function compressAttachment(file, max = 1280, quality = 0.75) {
     return new Promise((resolve, reject) => {
@@ -1883,7 +1907,7 @@
         if (t.attachment.type.startsWith('image/')) {
           fileMarkup = `<img src="${safeSrc(t.attachment.src)}" class="attachment-preview" alt="Lampiran">`;
         } else {
-          fileMarkup = `<div class="item-sub" style="margin-top: 4px;"><a href="${safeSrc(t.attachment.src)}" download="${escapeHTML(t.attachment.name)}" style="color: var(--primary); font-weight: 700;">📎 ${escapeHTML(t.attachment.name)}</a></div>`;
+          fileMarkup = `<div class="item-sub" style="margin-top: 4px;"><a href="#" onclick="openAttachment(${Number(t.id)}); return false;" style="color: var(--primary); font-weight: 700;">📎 ${escapeHTML(t.attachment.name)}</a></div>`;
         }
       }
 
@@ -2505,6 +2529,7 @@ suara alarm: nyala|Alarm Sound: On|Bunyi Penggera: Hidup|闹铃声音：开|صو
 suara alarm: mati|Alarm Sound: Off|Bunyi Penggera: Mati|闹铃声音：关|صوت المنبّه: متوقف
 file terlalu besar (maks 1,5 mb). pilih file yang lebih kecil atau pakai foto, bree!|File too large (max 1.5 MB). Choose a smaller file or use a photo.|Fail terlalu besar (maks 1.5 MB). Pilih fail yang lebih kecil atau guna foto.|文件太大（最大 1.5 MB）。请选择更小的文件或使用照片。|الملف كبير جدًا (الحد الأقصى 1.5 ميغابايت). اختر ملفًا أصغر أو استخدم صورة.
 pengingat nyala 🔔 kamu bakal diingatkan pas kuliah mau mulai dan pas deadline tugas makin dekat. catatan: baru jalan selama aplikasi kebuka atau aktif di latar belakang.|Reminders on 🔔 You'll be alerted before class starts and as assignment deadlines get close. Note: this only works while the app is open or active in the background.|Peringatan hidup 🔔 Anda akan diingatkan sebelum kuliah bermula dan apabila tarikh akhir tugasan hampir. Nota: hanya berfungsi semasa aplikasi dibuka atau aktif di latar belakang.|提醒已开启 🔔 上课前和作业截止临近时会提醒你。注意：仅在应用打开或在后台活跃时有效。|تم تفعيل التذكيرات 🔔 سننبّهك قبل بدء المحاضرة وعند اقتراب مواعيد المهام. ملاحظة: تعمل فقط أثناء فتح التطبيق أو نشاطه في الخلفية.
+lampiran nggak bisa dibuka, coba upload ulang ya bree.|Couldn't open the attachment, please upload it again.|Lampiran tidak dapat dibuka, sila muat naik semula.|无法打开附件，请重新上传。|تعذّر فتح المرفق، يرجى رفعه مرة أخرى.
 `;
     const coreOf = str => /^([^\p{L}\p{N}+]*)([\s\S]*?)([^\p{L}\p{N}]*)$/u.exec(str);
     const norm = c => c.toLowerCase().replace(/\s+/g, ' ');
