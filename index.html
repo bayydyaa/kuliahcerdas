@@ -401,6 +401,15 @@
     }
     .cal-day.today { border: 1.5px solid rgba(129, 140, 248, 0.7); background-color: rgba(99, 102, 241, 0.14); }
     .action-btn { box-shadow: inset 0 1px 0 var(--glass-hi); }
+    /* teks panjang (URL tanpa spasi, judul panjang) harus turun baris, bukan melebarkan halaman */
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+    body, .container, .card, .item-card, .view-section, .view-section > * { min-width: 0; max-width: 100%; }
+    .item-card > div, .home-task-box, .home-task-box > div { min-width: 0; }
+    .item-title, .item-sub, .home-task-title, .home-task-desc, .badge-deadline, #selectedDateContent, #taskList, #courseList, #scheduleList {
+      overflow-wrap: anywhere; word-break: break-word;
+    }
+    .badge-deadline { max-width: 100%; }
+    .container { overflow-x: clip; }
     /* tombol tema (fixed di pojok) jangan nutupin tombol di header */
     @media (max-width: 899px) { .section-title, .header-user { padding-right: 52px; } }
     /* kartu alarm di dalam aplikasi */
@@ -823,8 +832,8 @@
         <input type="file" id="taskFileInput" accept="image/*,.pdf,.doc,.docx,.ppt,.pptx,.xls,.xlsx,.txt" style="font-size: 11px;">
       </div>
       <div class="form-group">
-        <label>DEADLINE (TANGGAL & WAKTU)</label>
-        <input type="datetime-local" id="taskDeadlineInput" required>
+        <label>DEADLINE (TANGGAL)</label>
+        <input type="date" id="taskDeadlineInput" required>
       </div>
       <button class="btn btn-sm" id="btnSaveTask" onclick="saveTask()" style="width: 100%;">Simpan Tugas</button>
     </div>
@@ -1177,6 +1186,11 @@
   // ===== END CLOUD =====
 
   // ===== Keamanan: sanitasi data sebelum masuk ke HTML =====
+  // deskripsi tugas: escape dulu, baru URL http(s) dijadikan tautan (aman dari XSS)
+  function linkifyText(raw) {
+    return escapeHTML(raw).replace(/(https?:\/\/[^\s<]+?)([.,;:!?)]*)(?=\s|$)/g,
+      (m, url, tail) => `<a href="${url}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" style="color: var(--primary); font-weight: 700; text-decoration: underline;">${url}</a>${tail}`);
+  }
   function escapeHTML(str) {
     if (str === null || str === undefined) return '';
     return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
@@ -1493,13 +1507,13 @@
       let taskWidgetHtml = '';
       if (pendingTasksForCourse.length > 0) {
         const nearestTask = pendingTasksForCourse[0];
-        const dateObj = new Date(nearestTask.deadline);
-        const formattedDate = dateObj.toLocaleDateString(window.getLocale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+        const dateObj = new Date(String(nearestTask.deadline).slice(0, 10) + 'T12:00');
+        const formattedDate = dateObj.toLocaleDateString(window.getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
         
         taskWidgetHtml = `
           <div class="home-task-box">
             <div class="home-task-title">⏰ Deadline Terdekat (${pendingTasksForCourse.length} Tugas Pending):</div>
-            <div class="home-task-desc">📌 <b>${escapeHTML(nearestTask.desc)}</b></div>
+            <div class="home-task-desc">📌 <b>${linkifyText(nearestTask.desc)}</b></div>
             <div style="font-size: 10px; color: var(--badge-text); font-weight: 700; margin-top: 3px;">⏳ Batas: ${formattedDate}</div>
           </div>
         `;
@@ -1719,7 +1733,8 @@
     const editId = document.getElementById('taskEditId').value;
     const courseName = document.getElementById('taskCourseSelect').value;
     const desc = document.getElementById('taskDescInput').value;
-    const deadline = document.getElementById('taskDeadlineInput').value;
+    const rawDay = document.getElementById('taskDeadlineInput').value;
+    const deadline = rawDay ? rawDay.slice(0, 10) + 'T23:59' : ''; // tanggal saja; berlaku sampai akhir hari
     const fileInput = document.getElementById('taskFileInput');
 
     if (!courseName || !desc || !deadline) {
@@ -1831,7 +1846,7 @@
     document.getElementById('taskEditId').value = task.id;
     document.getElementById('taskCourseSelect').value = task.courseName;
     document.getElementById('taskDescInput').value = task.desc;
-    document.getElementById('taskDeadlineInput').value = task.deadline;
+    document.getElementById('taskDeadlineInput').value = String(task.deadline).slice(0, 10);
 
     document.getElementById('btnSaveTask').innerText = 'Update Tugas';
     document.getElementById('taskForm').classList.remove('hidden');
@@ -1899,8 +1914,8 @@
     filteredTasks.sort((a, b) => new Date(a.deadline) - new Date(b.deadline));
 
     taskContainer.innerHTML = filteredTasks.map(t => {
-      const dateObj = new Date(t.deadline);
-      const formattedDate = dateObj.toLocaleDateString(window.getLocale(), { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      const dateObj = new Date(String(t.deadline).slice(0, 10) + 'T12:00');
+      const formattedDate = dateObj.toLocaleDateString(window.getLocale(), { weekday: 'short', day: 'numeric', month: 'short' });
 
       let fileMarkup = '';
       if (t.attachment) {
@@ -1916,7 +1931,7 @@
           <input type="checkbox" class="task-checkbox" ${t.isCompleted ? 'checked' : ''} onchange="toggleTaskComplete(${t.id})">
           <div style="flex: 1;">
             <div class="item-title">📚 <b>${escapeHTML(t.courseName)}</b></div>
-            <div class="item-sub" style="font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 600;">${escapeHTML(t.desc)}</div>
+            <div class="item-sub" style="font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 600;">${linkifyText(t.desc)}</div>
             ${fileMarkup}
             <div class="badge-deadline">⏰ ${formattedDate}</div>
           </div>
@@ -2008,8 +2023,7 @@
       <div class="item-card ${t.isCompleted ? 'task-completed' : ''}">
         <div style="flex: 1;">
           <div class="item-title">📚 <b>${escapeHTML(t.courseName)}</b></div>
-          <div class="item-sub" style="font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 600;">${escapeHTML(t.desc)}</div>
-          <div class="badge-deadline">⏰ Jam ${escapeHTML(t.deadline.split('T')[1])}</div>
+          <div class="item-sub" style="font-size: 12px; color: var(--text); margin-top: 3px; font-weight: 600;">${linkifyText(t.desc)}</div>
         </div>
       </div>
     `).join('');
@@ -2530,6 +2544,7 @@ suara alarm: mati|Alarm Sound: Off|Bunyi Penggera: Mati|闹铃声音：关|صو�
 file terlalu besar (maks 1,5 mb). pilih file yang lebih kecil atau pakai foto, bree!|File too large (max 1.5 MB). Choose a smaller file or use a photo.|Fail terlalu besar (maks 1.5 MB). Pilih fail yang lebih kecil atau guna foto.|文件太大（最大 1.5 MB）。请选择更小的文件或使用照片。|الملف كبير جدًا (الحد الأقصى 1.5 ميغابايت). اختر ملفًا أصغر أو استخدم صورة.
 pengingat nyala 🔔 kamu bakal diingatkan pas kuliah mau mulai dan pas deadline tugas makin dekat. catatan: baru jalan selama aplikasi kebuka atau aktif di latar belakang.|Reminders on 🔔 You'll be alerted before class starts and as assignment deadlines get close. Note: this only works while the app is open or active in the background.|Peringatan hidup 🔔 Anda akan diingatkan sebelum kuliah bermula dan apabila tarikh akhir tugasan hampir. Nota: hanya berfungsi semasa aplikasi dibuka atau aktif di latar belakang.|提醒已开启 🔔 上课前和作业截止临近时会提醒你。注意：仅在应用打开或在后台活跃时有效。|تم تفعيل التذكيرات 🔔 سننبّهك قبل بدء المحاضرة وعند اقتراب مواعيد المهام. ملاحظة: تعمل فقط أثناء فتح التطبيق أو نشاطه في الخلفية.
 lampiran nggak bisa dibuka, coba upload ulang ya bree.|Couldn't open the attachment, please upload it again.|Lampiran tidak dapat dibuka, sila muat naik semula.|无法打开附件，请重新上传。|تعذّر فتح المرفق، يرجى رفعه مرة أخرى.
+deadline (tanggal)|Deadline (Date)|Tarikh Akhir (Tarikh)|截止日期|الموعد النهائي (التاريخ)
 `;
     const coreOf = str => /^([^\p{L}\p{N}+]*)([\s\S]*?)([^\p{L}\p{N}]*)$/u.exec(str);
     const norm = c => c.toLowerCase().replace(/\s+/g, ' ');
@@ -2867,13 +2882,14 @@ lampiran nggak bisa dibuka, coba upload ulang ya bree.|Couldn't open the attachm
     const now = Date.now(), DAY = 86400000;
     tasksDB.forEach(t => {
       if (t.userId !== currentUser.id || t.isCompleted || !t.deadline) return;
-      const left = new Date(t.deadline).getTime() - now;
+      const day = String(t.deadline).slice(0, 10);
+      const left = new Date(day + 'T23:59:59').getTime() - now;
       if (isNaN(left) || left <= 0 || left > DL_TIERS[DL_TIERS.length - 1][1]) return;
       const idx = DL_TIERS.findIndex(x => left <= x[1]);
       const [kind, , title, urgent] = DL_TIERS[idx];
       if (log[t.id + ':' + kind]) return;
       DL_TIERS.slice(idx).forEach(x => { log[t.id + ':' + x[0]] = now; }); // tingkat lebih longgar ikut dianggap sudah lewat
-      const when = new Date(t.deadline).toLocaleString(window.getLocale ? window.getLocale() : undefined, { weekday: 'short', day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' });
+      const when = new Date(day + 'T12:00').toLocaleDateString(window.getLocale ? window.getLocale() : undefined, { weekday: 'short', day: 'numeric', month: 'short' });
       fireReminder(title, `${t.courseName}: ${t.desc} • ${when}`, t.id + ':' + kind, urgent);
     });
     checkClasses(log, now);
