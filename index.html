@@ -418,6 +418,21 @@
     [data-theme="light"] .ios-date input[type="date"] {
       background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%234f46e5' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='18' rx='3'/%3E%3Cpath d='M16 2v4M8 2v4M3 10h18'/%3E%3C/svg%3E");
     }
+    /* penampil file & lembar link di dalam aplikasi (iPhone mode layar utama nggak punya tombol Kembali) */
+    #fileViewer { position: fixed; inset: 0; z-index: 10002; display: flex; flex-direction: column; background: rgba(8, 12, 26, 0.97); animation: cardPop 0.4s var(--ease-out); }
+    #fileViewer header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: calc(12px + env(safe-area-inset-top, 0px)) 16px 12px; color: #fff; font-weight: 800; font-size: 14px; }
+    #fileViewer header span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    #fileViewer .fv-body { flex: 1; overflow: auto; padding: 0 12px calc(16px + env(safe-area-inset-bottom, 0px)); display: flex; align-items: center; justify-content: center; text-align: center; color: #cbd5e1; font-size: 13px; font-weight: 600; }
+    #fileViewer iframe { width: 100%; height: 100%; border: 0; background: #fff; border-radius: 12px; }
+    #fileViewer img { max-width: 100%; max-height: 100%; border-radius: 12px; }
+    #linkSheetWrap { position: fixed; inset: 0; z-index: 10002; background: rgba(0, 0, 0, 0.45); display: flex; align-items: flex-end; justify-content: center; animation: cardPop 0.3s var(--ease-out); }
+    #linkSheet { width: 100%; max-width: 480px; margin: 0 12px calc(14px + env(safe-area-inset-bottom, 0px)); padding: 18px; border-radius: 24px; color: var(--text);
+      background-color: var(--card-bg-solid); background-image: var(--grain); background-size: 160px; -webkit-backdrop-filter: blur(22px); backdrop-filter: blur(22px);
+      border: 1px solid var(--border); box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.4); animation: riseIn 0.45s var(--ease-spring); }
+    #linkSheet b { display: block; font-size: 14px; margin-bottom: 6px; }
+    #linkSheet .ls-url { font-size: 12px; color: var(--muted); font-weight: 600; word-break: break-all; margin-bottom: 14px; max-height: 76px; overflow: auto; }
+    #linkSheet .ls-row { display: flex; gap: 8px; }
+    #linkSheet .ls-row .btn { margin: 0; flex: 1; }
     /* teks panjang (URL tanpa spasi, judul panjang) harus turun baris, bukan melebarkan halaman */
     html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     body, .container, .card, .item-card, .view-section, .view-section > * { min-width: 0; max-width: 100%; }
@@ -1785,6 +1800,62 @@
     }
   }
 
+  // ===== PWA iPhone: jangan pernah mengarahkan jendela aplikasi ke link/file (nggak ada tombol Kembali) =====
+  const IS_IOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const IS_STANDALONE = () => window.navigator.standalone === true || (window.matchMedia && matchMedia('(display-mode: standalone)').matches);
+
+  function showFileViewer(url, type, name) {
+    const old = document.getElementById('fileViewer'); if (old) old.remove();
+    const ov = document.createElement('div'); ov.id = 'fileViewer';
+    const head = document.createElement('header');
+    const title = document.createElement('span'); title.textContent = name || '';
+    const close = document.createElement('button'); close.className = 'btn btn-sm'; close.style.cssText = 'width:auto;margin:0;padding:8px 16px'; close.textContent = 'Tutup';
+    head.append(title, close);
+    const body = document.createElement('div'); body.className = 'fv-body';
+    if (/^image\//.test(type)) { const im = document.createElement('img'); im.src = url; body.appendChild(im); }
+    else if (/^(application\/pdf|text\/)/.test(type)) { const fr = document.createElement('iframe'); fr.src = url; body.appendChild(fr); }
+    else body.textContent = 'Format file ini nggak bisa dipratinjau di sini. Buka aplikasi lewat Safari buat membukanya.';
+    ov.append(head, body); document.body.appendChild(ov);
+    const done = () => { ov.remove(); setTimeout(() => URL.revokeObjectURL(url), 1000); document.removeEventListener('keydown', onKey); };
+    const onKey = e => { if (e.key === 'Escape') done(); };
+    close.addEventListener('click', done); document.addEventListener('keydown', onKey);
+  }
+
+  function copyText(txt) {
+    if (navigator.clipboard && navigator.clipboard.writeText) return navigator.clipboard.writeText(txt).catch(() => legacyCopy(txt));
+    legacyCopy(txt); return Promise.resolve();
+  }
+  function legacyCopy(txt) {
+    const ta = document.createElement('textarea'); ta.value = txt; ta.style.cssText = 'position:fixed;opacity:0;top:0';
+    document.body.appendChild(ta); ta.select(); try { document.execCommand('copy'); } catch (e) {} ta.remove();
+  }
+  function showLinkSheet(url) {
+    const old = document.getElementById('linkSheetWrap'); if (old) old.remove();
+    const wrap = document.createElement('div'); wrap.id = 'linkSheetWrap';
+    const sheet = document.createElement('div'); sheet.id = 'linkSheet';
+    const t = document.createElement('b'); t.textContent = 'Buka link ini?';
+    const u = document.createElement('div'); u.className = 'ls-url'; u.textContent = url;
+    const row = document.createElement('div'); row.className = 'ls-row';
+    const mk = (label, cls) => { const b = document.createElement('button'); b.className = 'btn ' + cls; b.textContent = label; return b; };
+    const bCopy = mk('Salin link', 'btn-secondary'), bOpen = mk('Buka', ''), bCancel = mk('Batal', 'btn-secondary');
+    row.append(bCancel, bCopy, bOpen); sheet.append(t, u, row); wrap.appendChild(sheet); document.body.appendChild(wrap);
+    const close = () => wrap.remove();
+    wrap.addEventListener('click', e => { if (e.target === wrap) close(); });
+    bCancel.addEventListener('click', close);
+    bCopy.addEventListener('click', () => { copyText(url); bCopy.textContent = window.t18 ? window.t18('Link disalin ✅') : 'Link disalin ✅'; setTimeout(close, 900); });
+    bOpen.addEventListener('click', () => {
+      const w = window.open(url, '_blank', 'noopener,noreferrer');
+      if (!w) { copyText(url); bOpen.textContent = window.t18 ? window.t18('Link disalin ✅') : 'Link disalin ✅'; setTimeout(close, 1200); } else close();
+    });
+  }
+  // link http(s) di mode layar utama iPhone: tampilkan lembar pilihan, jangan pindahkan jendela aplikasi
+  document.addEventListener('click', e => {
+    const a = e.target.closest && e.target.closest('a[href^="http"]');
+    if (!a || !(IS_IOS && IS_STANDALONE())) return;
+    e.preventDefault(); e.stopPropagation();
+    showLinkSheet(a.href);
+  }, true);
+
   // lampiran non-foto: ubah data URL -> Blob. (data URL + atribut download diabaikan Safari iPhone)
   function openAttachment(id) {
     const t = tasksDB.find(x => Number(x.id) === Number(id));
@@ -1798,9 +1869,19 @@
     for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
     const blob = new Blob([bytes], { type: m[1] || t.attachment.type || 'application/octet-stream' });
     const url = URL.createObjectURL(blob);
-    const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    const isIOS = IS_IOS;
+    if (isIOS && IS_STANDALONE()) {
+      // mode layar utama: pindah halaman = nyangkut (nggak ada tombol Kembali). Pakai lembar Bagikan atau penampil dengan tombol Tutup.
+      const name = t.attachment.name || 'lampiran', type = blob.type || 'application/octet-stream';
+      const file = new File([blob], name, { type });
+      if (navigator.canShare && navigator.canShare({ files: [file] })) {
+        navigator.share({ files: [file], title: name }).catch(() => {});
+        setTimeout(() => URL.revokeObjectURL(url), 60000);
+      } else showFileViewer(url, type, name);
+      return;
+    }
     if (isIOS) {
-      if (!window.open(url, '_blank')) location.href = url;
+      if (!window.open(url, '_blank')) showFileViewer(url, blob.type, t.attachment.name);
     } else {
       const a = document.createElement('a');
       a.href = url; a.download = t.attachment.name || 'lampiran';
@@ -2180,7 +2261,7 @@
     document.body.appendChild(a);
     a.click();
     a.remove();
-    if (isIOS) window.open(url, '_blank'); // cadangan terakhir kalau Bagikan nggak tersedia
+    if (isIOS) { if (IS_STANDALONE() || !window.open(url, '_blank')) showFileViewer(url, 'text/plain', filename); } // cadangan terakhir kalau Bagikan nggak tersedia
     setTimeout(() => URL.revokeObjectURL(url), 60000);
     alert('Mantap bree! File backup data berhasil di-download 💾🎉');
   }
@@ -2564,6 +2645,13 @@ pengingat nyala 🔔 kamu bakal diingatkan pas kuliah mau mulai dan pas deadline
 lampiran nggak bisa dibuka, coba upload ulang ya bree.|Couldn't open the attachment, please upload it again.|Lampiran tidak dapat dibuka, sila muat naik semula.|无法打开附件，请重新上传。|تعذّر فتح المرفق، يرجى رفعه مرة أخرى.
 deadline (tanggal)|Deadline (Date)|Tarikh Akhir (Tarikh)|截止日期|الموعد النهائي (التاريخ)
 pilih tanggal|Select date|Pilih tarikh|选择日期|اختر التاريخ
+buka link ini?|Open this link?|Buka pautan ini?|打开此链接？|فتح هذا الرابط؟
+salin link|Copy link|Salin pautan|复制链接|نسخ الرابط
+link disalin ✅|Link copied ✅|Pautan disalin ✅|链接已复制 ✅|تم نسخ الرابط ✅
+buka|Open|Buka|打开|فتح
+batal|Cancel|Batal|取消|إلغاء
+tutup|Close|Tutup|关闭|إغلاق
+format file ini nggak bisa dipratinjau di sini. buka aplikasi lewat safari buat membukanya.|This file type can't be previewed here. Open the app in Safari to view it.|Format fail ini tidak boleh dipratonton di sini. Buka aplikasi melalui Safari untuk melihatnya.|此文件格式无法在此预览。请在 Safari 中打开应用查看。|لا يمكن معاينة هذا الملف هنا. افتح التطبيق عبر Safari لعرضه.
 `;
     const coreOf = str => /^([^\p{L}\p{N}+]*)([\s\S]*?)([^\p{L}\p{N}]*)$/u.exec(str);
     const norm = c => c.toLowerCase().replace(/\s+/g, ' ');
